@@ -13,7 +13,6 @@
 '
 ' You should have received a copy of the GNU General Public License
 ' along with this program.  If not, see <http://www.gnu.org/licenses/>.
-Imports System.Security.Principal
 
 
 Public Class frmLogin
@@ -26,7 +25,7 @@ Public Class frmLogin
     Private Sub LoginForm_Load(sender As Object, e As EventArgs) Handles Me.Load
         lblClimsoftVersion.Text = My.Settings.climsoftVersion
         ' Only show link to change DB connection string if user is currently Administrator
-        lblDbdetails.Visible = New WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)
+        lblDbdetails.Visible = isAdministrator()
 
         ' FIXME
         msgKeyentryFormsListUpdated = "List of key-entry forms updated!"

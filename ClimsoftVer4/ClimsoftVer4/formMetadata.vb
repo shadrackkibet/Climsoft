@@ -1,4 +1,20 @@
-﻿Public Class formMetadata
+﻿' CLIMSOFT - Climate Database Management System
+' Copyright (C) 2017
+'
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Public Class formMetadata
     Dim dbconn As New MySql.Data.MySqlClient.MySqlConnection
     Dim dbConnectionString As String
     Dim da As MySql.Data.MySqlClient.MySqlDataAdapter
@@ -305,7 +321,7 @@
             dsNewRow.Item("authority") = txtAuthority.Text
             If IsNumeric(txtgeoAccuracy.Text) Then dsNewRow.Item("geolocationAccuracy") = Val(txtgeoAccuracy.Text)
             If IsNumeric(txtgeoMethod.Text) Then dsNewRow.Item("geolocationMethod") = Val(txtgeoMethod.Text)
-            
+
             If IsDate(txtOpenDate.Text) Then
                 ' Opening date can only be in the past
                 If DateDiff(DateInterval.Day, DateValue(txtOpenDate.Text), Now) > 0 Then dsNewRow.Item("openingDatetime") = txtOpenDate.Text
@@ -515,7 +531,7 @@ Err:
         ClearStationForm()
     End Sub
 
- 
+
 
     Private Sub cmdFirstRecord_Click(sender As Object, e As EventArgs) Handles cmdFirstRecord.Click
         rec = 0
@@ -675,7 +691,7 @@ Err:
 
             dsNewRow.Item("recordedFrom") = txtStation.Text
             dsNewRow.Item("describedBy") = txtElement.Text
-            dsNewRow.Item("recordedWith") = txtinstrument.Text
+            dsNewRow.Item("recordedWith") = txtInstrument.Text
             dsNewRow.Item("scheduledFor") = txtScheduleClass.Text
             dsNewRow.Item("height") = txtHeight.Text
             dsNewRow.Item("beginDate") = txtBeginDate.Text
@@ -964,7 +980,7 @@ Err:
         End Try
     End Sub
     Private Sub combSearchStation_Click(sender As Object, e As EventArgs) Handles combSearchStation.Click
-   
+
     End Sub
 
     Sub Locate_Station(fldnm As String, datval As String)
@@ -1120,7 +1136,7 @@ Err:
     End Sub
 
 
-    
+
     Private Sub cmdReset_Click(sender As Object, e As EventArgs) Handles cmdReset.Click
         txtFormId.Text = ""
         txtFormDescription.Text = ""
@@ -1441,7 +1457,7 @@ Err:
     End Sub
 
     Private Sub cmdNext1_Click(sender As Object, e As EventArgs) Handles cmdNext1.Click
- 
+
         If rec < Kount - 1 Then
             rec = rec + 1
             populateStationElement("stationelement", rec, Kount)
@@ -1743,7 +1759,7 @@ Err:
         End If
     End Sub
 
- 
+
     Private Sub cmdDeleteFeature_Click(sender As Object, e As EventArgs) Handles cmdDeleteFeature.Click
         If DeleteRecord("physicalfeature", rec) Then
             SetDataSet("physicalfeature")

@@ -1,4 +1,21 @@
-﻿Public Class frmUsers
+﻿' CLIMSOFT - Climate Database Management System
+' Copyright (C) 2017
+'
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Public Class frmUsers
     Dim conn As New MySql.Data.MySqlClient.MySqlConnection
     Dim connStr As String, Sql As String
     Dim objCmd As MySql.Data.MySqlClient.MySqlCommand
@@ -6,7 +23,7 @@
     Dim ds As New DataSet
     Dim da As New MySql.Data.MySqlClient.MySqlDataAdapter
     ' Dim sql As String
-    
+
     Private Sub cmdClose_Click(sender As Object, e As EventArgs) Handles cmdClose.Click
         conn.Close()
         Me.Close()
@@ -41,7 +58,7 @@
         conn.Open()
         If Strings.Len(txtUserPwd.Text) >= 6 Then
             If txtUserPwd.Text = txtPasswordConfirmation.Text Then
-                
+
                 'Try
                 'add new user to [climsoftusers] table
                 Sql = "INSERT INTO climsoftusers(userName,userRole) VALUES ('" & txtUserName.Text & "','" & cboUserType.Text & "'" & ")"

@@ -122,7 +122,7 @@ Partial Class frmLogin
         '
         Me.lblDbdetails.AutoSize = True
         Me.lblDbdetails.ForeColor = System.Drawing.Color.Blue
-        Me.lblDbdetails.Location = New System.Drawing.Point(316, 141)
+        Me.lblDbdetails.Location = New System.Drawing.Point(309, 141)
         Me.lblDbdetails.Name = "lblDbdetails"
         Me.lblDbdetails.Size = New System.Drawing.Size(158, 13)
         Me.lblDbdetails.TabIndex = 8

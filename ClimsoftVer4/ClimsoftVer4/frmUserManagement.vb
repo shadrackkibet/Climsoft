@@ -1,4 +1,21 @@
-﻿Public Class frmUserManagement
+﻿' CLIMSOFT - Climate Database Management System
+' Copyright (C) 2017
+'
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Public Class frmUserManagement
     Dim conn As New MySql.Data.MySqlClient.MySqlConnection
     Dim connStr As String, Sql As String
     Dim objCmd As MySql.Data.MySqlClient.MySqlCommand
@@ -65,7 +82,7 @@
                         objCmd = New MySql.Data.MySqlClient.MySqlCommand(Sql, conn)
                         'execute command
                         objCmd.ExecuteNonQuery()
-                       
+
                         ' ''Sql = "GRANT ClimsoftAdmin TO '" & txtUserName.Text & "' WITH ADMIN OPTION;"
                         ' ''objCmd = New MySql.Data.MySqlClient.MySqlCommand(Sql, conn)
                         '' ''execute command
@@ -1341,7 +1358,7 @@
     End Sub
 
     Private Sub txtConfirmPassword_TextChanged(sender As Object, e As EventArgs) Handles txtConfirmPassword.TextChanged
-        If Strings.Len(txtConfirmPassword.Text) > 0 And Strings.Len(txtPassword.Text) > 0 And _
+        If Strings.Len(txtConfirmPassword.Text) > 0 And Strings.Len(txtPassword.Text) > 0 And
             Strings.Len(txtUserName.Text) > 0 And Strings.Len(cboUserRole.Text) > 0 Then
             btnAddNew.Enabled = True
         End If

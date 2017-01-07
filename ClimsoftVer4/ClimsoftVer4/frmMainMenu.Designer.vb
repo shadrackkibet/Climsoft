@@ -237,6 +237,7 @@ Partial Class frmMainMenu
         '
         'mnuToolsOptions
         '
+        Me.mnuToolsOptions.Enabled = False
         Me.mnuToolsOptions.Name = "mnuToolsOptions"
         Me.mnuToolsOptions.Size = New System.Drawing.Size(242, 24)
         Me.mnuToolsOptions.Text = "Options"

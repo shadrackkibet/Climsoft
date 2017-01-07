@@ -1,4 +1,21 @@
-﻿Public Class frmElementSequencerHourly
+﻿' CLIMSOFT - Climate Database Management System
+' Copyright (C) 2017
+'
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Public Class frmElementSequencerHourly
     Dim conn As New MySql.Data.MySqlClient.MySqlConnection
     Dim ds As New DataSet
     Dim da As New MySql.Data.MySqlClient.MySqlDataAdapter
@@ -37,18 +54,18 @@ Err:
 
         'Clear sequencer table for non-leap year
         sql = "delete from seq_month_day_element"
-               
-                    ' Create the Command for executing query and set its properties
-                    objCmd = New MySql.Data.MySqlClient.MySqlCommand(sql, conn)
-                    Try
-                        'Execute query
+
+        ' Create the Command for executing query and set its properties
+        objCmd = New MySql.Data.MySqlClient.MySqlCommand(sql, conn)
+        Try
+            'Execute query
             objCmd.ExecuteNonQuery()
             'MsgBox("Old sequencer records for non-leap year deleted!", MsgBoxStyle.Information)
-                        ' Catch ex As MySql.Data.MySqlClient.MySqlException
-                        'Ignore expected error i.e. error of Duplicates in MySqlException
-                    Catch ex As Exception
-                        'Dispaly error message if it is different from the one trapped in 'Catch' execption above
-                        MsgBox(ex.Message)
+            ' Catch ex As MySql.Data.MySqlClient.MySqlException
+            'Ignore expected error i.e. error of Duplicates in MySqlException
+        Catch ex As Exception
+            'Dispaly error message if it is different from the one trapped in 'Catch' execption above
+            MsgBox(ex.Message)
         End Try
 
         'Append new sequencer records for non-leap year

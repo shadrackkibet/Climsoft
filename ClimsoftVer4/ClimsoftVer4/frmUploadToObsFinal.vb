@@ -1,4 +1,21 @@
-﻿Public Class frmUploadToObsFinal
+﻿' CLIMSOFT - Climate Database Management System
+' Copyright (C) 2017
+'
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Public Class frmUploadToObsFinal
     Dim msgTxtNotYetImplemented As String
     Dim MyConnectionString As String, sql As String, conn As New MySql.Data.MySqlClient.MySqlConnection
     Dim da As New MySql.Data.MySqlClient.MySqlDataAdapter
@@ -19,7 +36,7 @@
         frmDataTransferProgress.Show()
 
         'Upload data to observationInitial table
-        Dim strSQL As String, stnId As String, elemCode As Integer, obsDate As String, obsVal As String, obsFlag, mark1 As String, _
+        Dim strSQL As String, stnId As String, elemCode As Integer, obsDate As String, obsVal As String, obsFlag, mark1 As String,
             qcStatus As Integer, acquisitionType As Integer, obsLevel As String, yyyy As Integer, mm As String, dd As String, hh As String
 
         Dim ds As New DataSet
@@ -38,11 +55,11 @@
         conn.ConnectionString = MyConnectionString
         conn.Open()
         'First upload records with QC status =1
-        sql = "SELECT recordedFrom,describedBy,obsdatetime,obsLevel,obsValue,flag,qcStatus,acquisitionType,mark " & _
-            "FROM observationInitial WHERE year(obsDateTime) between " & beginYear & " AND " & endYear & _
+        sql = "SELECT recordedFrom,describedBy,obsdatetime,obsLevel,obsValue,flag,qcStatus,acquisitionType,mark " &
+            "FROM observationInitial WHERE year(obsDateTime) between " & beginYear & " AND " & endYear &
             " AND month(obsDatetime) between " & beginMonth & " AND " & endMonth & " AND qcStatus=1"
 
-        da = New MySql.Data.MySqlClient.MySqlDataAdapter(Sql, conn)
+        da = New MySql.Data.MySqlClient.MySqlDataAdapter(sql, conn)
         da.Fill(ds, "obsInitial")
         ''conn.Close() '
         ' Dim dsObsInitial As New MySql.Data.MySqlClient.MySqlDataAdapter
@@ -53,8 +70,8 @@
         Dim ds1 As New DataSet
         Dim da1 As MySql.Data.MySqlClient.MySqlDataAdapter
         Dim elemMaxRows As Integer, k As Integer, valScale As Single
-        Sql = "SELECT elementId,elementScale FROM obselement"
-        da1 = New MySql.Data.MySqlClient.MySqlDataAdapter(Sql, conn)
+        sql = "SELECT elementId,elementScale FROM obselement"
+        da1 = New MySql.Data.MySqlClient.MySqlDataAdapter(sql, conn)
 
         da1.Fill(ds1, "elemScale")
         elemMaxRows = ds1.Tables("elemScale").Rows.Count
@@ -96,8 +113,8 @@
                 If Not IsDBNull(ds.Tables("obsInitial").Rows(n).Item("acquisitionType")) Then acquisitionType = ds.Tables("obsInitial").Rows(n).Item("acquisitionType")
 
                 'Generate SQL string for inserting data into observationFinal table
-                strSQL = "INSERT IGNORE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType,mark) " & _
-                    "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," & _
+                strSQL = "INSERT IGNORE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType,mark) " &
+                    "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," &
                     qcStatus & "," & acquisitionType & "," & mark1 & ")"
 
                 ' Create the Command for executing query and set its properties
@@ -127,8 +144,8 @@
         conn.Open()
 
         'Next upload records with QC status =2
-        sql = "SELECT recordedFrom,describedBy,obsdatetime,obsLevel,obsValue,flag,qcStatus,acquisitionType " & _
-            "FROM observationInitial WHERE year(obsDateTime) between " & beginYear & " AND " & endYear & _
+        sql = "SELECT recordedFrom,describedBy,obsdatetime,obsLevel,obsValue,flag,qcStatus,acquisitionType " &
+            "FROM observationInitial WHERE year(obsDateTime) between " & beginYear & " AND " & endYear &
             " AND month(obsDatetime) between " & beginMonth & " AND " & endMonth & " AND qcStatus=2"
 
         da = New MySql.Data.MySqlClient.MySqlDataAdapter(sql, conn)
@@ -182,8 +199,8 @@
             acquisitionType = ds.Tables("obsInitial").Rows(n).Item("acquisitionType")
 
             'Generate SQL string for replacing existing records of same Key with records with qcStatus 2
-            strSQL = "REPLACE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType) " & _
-                "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," & _
+            strSQL = "REPLACE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType) " &
+                "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," &
                 qcStatus & "," & acquisitionType & ")"
 
             ' Create the Command for executing query and set its properties
