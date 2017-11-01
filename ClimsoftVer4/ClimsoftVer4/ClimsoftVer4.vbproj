@@ -98,6 +98,12 @@
     <Compile Include="clsProducts.vb" />
     <Compile Include="clsRInterface.vb" />
     <Compile Include="dataEntryGlobalRoutines.vb" />
+    <Compile Include="dlgFilterStations.Designer.vb">
+      <DependentUpon>dlgFilterStations.vb</DependentUpon>
+    </Compile>
+    <Compile Include="dlgFilterStations.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="formAWSRealTime.Designer.vb">
       <DependentUpon>formAWSRealTime.vb</DependentUpon>
     </Compile>
@@ -509,6 +515,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="dlgFilterStations.resx">
+      <DependentUpon>dlgFilterStations.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="formClimat.de.resx">
       <DependentUpon>formClimat.vb</DependentUpon>
     </EmbeddedResource>

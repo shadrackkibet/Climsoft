@@ -32,6 +32,7 @@ Partial Class ucrStationSelector
         Me.tsmFilterStations = New System.Windows.Forms.ToolStripMenuItem()
         Me.tsmSortByID = New System.Windows.Forms.ToolStripMenuItem()
         Me.tsmSortByStationName = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
         Me.cmsStationOptions.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -49,37 +50,37 @@ Partial Class ucrStationSelector
         '
         'cmsStationOptions
         '
-        Me.cmsStationOptions.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsmStationNames, Me.tsmIDs, Me.tsmIDsAndStations, Me.ToolStripSeparator1, Me.tsmFilterStations, Me.tsmSortByID, Me.tsmSortByStationName})
+        Me.cmsStationOptions.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.tsmStationNames, Me.tsmIDs, Me.tsmIDsAndStations, Me.ToolStripSeparator1, Me.tsmSortByID, Me.tsmSortByStationName, Me.ToolStripSeparator2, Me.tsmFilterStations})
         Me.cmsStationOptions.Name = "cmsStationOptions"
-        Me.cmsStationOptions.Size = New System.Drawing.Size(187, 142)
+        Me.cmsStationOptions.Size = New System.Drawing.Size(187, 148)
         '
         'tsmStationNames
         '
         Me.tsmStationNames.Name = "tsmStationNames"
-        Me.tsmStationNames.Size = New System.Drawing.Size(202, 22)
+        Me.tsmStationNames.Size = New System.Drawing.Size(186, 22)
         Me.tsmStationNames.Text = "Station Names"
         '
         'tsmIDs
         '
         Me.tsmIDs.Name = "tsmIDs"
-        Me.tsmIDs.Size = New System.Drawing.Size(202, 22)
+        Me.tsmIDs.Size = New System.Drawing.Size(186, 22)
         Me.tsmIDs.Text = "IDs"
         '
         'tsmIDsAndStations
         '
         Me.tsmIDsAndStations.Name = "tsmIDsAndStations"
-        Me.tsmIDsAndStations.Size = New System.Drawing.Size(202, 22)
+        Me.tsmIDsAndStations.Size = New System.Drawing.Size(186, 22)
         Me.tsmIDsAndStations.Text = "Stations and IDs"
         '
         'ToolStripSeparator1
         '
         Me.ToolStripSeparator1.Name = "ToolStripSeparator1"
-        Me.ToolStripSeparator1.Size = New System.Drawing.Size(199, 6)
+        Me.ToolStripSeparator1.Size = New System.Drawing.Size(183, 6)
         '
         'tsmFilterStations
         '
         Me.tsmFilterStations.Name = "tsmFilterStations"
-        Me.tsmFilterStations.Size = New System.Drawing.Size(202, 22)
+        Me.tsmFilterStations.Size = New System.Drawing.Size(186, 22)
         Me.tsmFilterStations.Text = "Filter Stations..."
         '
         'tsmSortByID
@@ -93,6 +94,11 @@ Partial Class ucrStationSelector
         Me.tsmSortByStationName.Name = "tsmSortByStationName"
         Me.tsmSortByStationName.Size = New System.Drawing.Size(186, 22)
         Me.tsmSortByStationName.Text = "Sort by Station Name"
+        '
+        'ToolStripSeparator2
+        '
+        Me.ToolStripSeparator2.Name = "ToolStripSeparator2"
+        Me.ToolStripSeparator2.Size = New System.Drawing.Size(183, 6)
         '
         'ucrStationSelector
         '
@@ -115,4 +121,5 @@ Partial Class ucrStationSelector
     Friend WithEvents tsmFilterStations As ToolStripMenuItem
     Friend WithEvents tsmSortByID As ToolStripMenuItem
     Friend WithEvents tsmSortByStationName As ToolStripMenuItem
+    Friend WithEvents ToolStripSeparator2 As ToolStripSeparator
 End Class

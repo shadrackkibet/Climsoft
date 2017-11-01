@@ -48,7 +48,7 @@
     Private Sub ucrStationSelector_Load(sender As Object, e As EventArgs) Handles Me.Load
         If bFirstLoad Then
             InitialiseStationDataTable()
-            SortByID()
+            SortByStationName()
             PopulateStationList()
             bFirstLoad = False
         End If
@@ -92,10 +92,12 @@
     End Sub
 
     Private Sub SortByID()
-        dtbStations.DefaultView.Sort = strTypeIDs & " ASC"
-        tsmSortByID.Checked = True
-        tsmSortByStationName.Checked = False
-        PopulateStationList()
+        If dtbStations IsNot Nothing Then
+            dtbStations.DefaultView.Sort = strTypeIDs & " ASC"
+            tsmSortByID.Checked = True
+            tsmSortByStationName.Checked = False
+            PopulateStationList()
+        End If
     End Sub
 
     Private Sub tsmSortByStationName_Click(sender As Object, e As EventArgs) Handles tsmSortByStationName.Click
@@ -106,6 +108,20 @@
         dtbStations.DefaultView.Sort = strTypeStations & " ASC"
         tsmSortByID.Checked = False
         tsmSortByStationName.Checked = True
+        PopulateStationList()
+    End Sub
+
+    Public Overrides Function Validate() As Boolean
+        Return cboStations.Items.Contains(cboStations.Text)
+    End Function
+
+    Private Sub cboStations_Leave(sender As Object, e As EventArgs) Handles cboStations.Leave
+
+    End Sub
+
+    Private Sub tsmFilterStations_Click(sender As Object, e As EventArgs) Handles tsmFilterStations.Click
+        dlgFilterStations.SetDataTable(dtbStations)
+        dlgFilterStations.ShowDialog()
         PopulateStationList()
     End Sub
 End Class
