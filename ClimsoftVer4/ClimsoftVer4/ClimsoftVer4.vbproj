@@ -85,6 +85,8 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
@@ -105,12 +107,48 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ef6\acquisitiontype.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\aws_elements.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\aws_stations.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\Climsoft4EntityDataModel.Context.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Climsoft4EntityDataModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\Climsoft4EntityDataModel.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Climsoft4EntityDataModel.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\Climsoft4EntityDataModel.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\climsoftusers.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="clsHelp.vb" />
     <Compile Include="clsClimsoftSettings.vb" />
     <Compile Include="clsLanguageTranslation.vb" />
     <Compile Include="clsProducts.vb" />
     <Compile Include="clsRInterface.vb" />
     <Compile Include="dataEntryGlobalRoutines.vb" />
+    <Compile Include="ef6\data_forms.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\featuregeographicalposition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\flags.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="formAWSRealTime.Designer.vb">
       <DependentUpon>formAWSRealTime.vb</DependentUpon>
     </Compile>
@@ -170,6 +208,24 @@
     </Compile>
     <Compile Include="formPaperArchive.vb">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ef6\form_daily2.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\form_hourly.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\form_hourlywind.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\form_hourly_time_selection.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\form_synoptic2_tdcf.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\form_synoptic_2_ra1.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
     </Compile>
     <Compile Include="frmAWSelements.Designer.vb">
       <DependentUpon>frmAWSelements.vb</DependentUpon>
@@ -482,6 +538,15 @@
     <Compile Include="frmUsers.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ef6\instrument.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\instrumentfaultreport.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\language_translation.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="My Project\Application1.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
@@ -518,6 +583,84 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Common.vb" />
+    <Compile Include="ef6\obselement.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\observationfinal.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\observationinitial.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\obsscheduleclass.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\paperarchivedefinition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\physicalfeature.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\physicalfeatureclass.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\qcstatusdefinition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\qctype.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\qc_interelement_1.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\qc_interelement_2.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\qc_interelement_relationship_definition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\regkeys.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\routinereportdefinition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_daily_element.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_element.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day_element.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day_element_leap_yr.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day_leap_yr.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day_synoptime.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\seq_month_day_synoptime_leap_yr.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\station.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\stationnetworkdefinition.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\synopfeature.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="ef6\tblproducts.vb">
+      <DependentUpon>Climsoft4EntityDataModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="UserControl1.Designer.vb">
       <DependentUpon>UserControl1.vb</DependentUpon>
     </Compile>
@@ -914,6 +1057,13 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EntityDeploy Include="ef6\Climsoft4EntityDataModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Climsoft4EntityDataModel.Designer.vb</LastGenOutput>
+    </EntityDeploy>
+    <None Include="ef6\Climsoft4EntityDataModel.edmx.diagram">
+      <DependentUpon>Climsoft4EntityDataModel.edmx</DependentUpon>
+    </None>
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application1.Designer.vb</LastGenOutput>
@@ -936,6 +1086,16 @@
     <XliffResource Include="MultilingualResources\ClimsoftVer4.fr.xlf" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ef6\Climsoft4EntityDataModel.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>Climsoft4EntityDataModel.edmx</DependentUpon>
+      <LastGenOutput>Climsoft4EntityDataModel.Context.vb</LastGenOutput>
+    </Content>
+    <Content Include="ef6\Climsoft4EntityDataModel.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>Climsoft4EntityDataModel.edmx</DependentUpon>
+      <LastGenOutput>Climsoft4EntityDataModel.vb</LastGenOutput>
+    </Content>
     <Content Include="config.inf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -947,6 +1107,9 @@
     <Content Include="static\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets" Label="MultilingualAppToolkit" Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\Multilingual App Toolkit\Microsoft.Multilingual.ResxResources.targets')" />

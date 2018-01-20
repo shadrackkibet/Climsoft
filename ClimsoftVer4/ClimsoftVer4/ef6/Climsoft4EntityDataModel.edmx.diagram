@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="13f84b598f5647a18fcc7e897eeeb0e4" Name="Diagram1">
+        <EntityTypeShape EntityType="Climsoft4EDM.acquisitiontype" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.aws_elements" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.aws_stations" Width="1.5" PointX="0.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.climsoftusers" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.data_forms" Width="1.5" PointX="8.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.flags" Width="1.5" PointX="8.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_daily2" Width="1.5" PointX="10.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_hourly" Width="1.5" PointX="12.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_hourly_time_selection" Width="1.5" PointX="12.75" PointY="13.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_hourlywind" Width="1.5" PointX="14.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_synoptic_2_ra1" Width="1.5" PointX="7.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.form_synoptic2_tdcf" Width="1.5" PointX="16.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.instrument" Width="1.5" PointX="3" PointY="7.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.instrumentfaultreport" Width="1.5" PointX="5.25" PointY="9.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.language_translation" Width="1.5" PointX="0.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.obselement" Width="1.5" PointX="3.75" PointY="3.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.obsscheduleclass" Width="1.5" PointX="3" PointY="12.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.paperarchivedefinition" Width="1.5" PointX="2.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.physicalfeatureclass" Width="1.5" PointX="3" PointY="14.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.qc_interelement_1" Width="1.5" PointX="4.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.qc_interelement_2" Width="1.5" PointX="12.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.qc_interelement_relationship_definition" Width="1.5" PointX="18.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.qcstatusdefinition" Width="1.5" PointX="18.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.qctype" Width="1.5" PointX="18.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.regkeys" Width="1.5" PointX="18.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.routinereportdefinition" Width="1.5" PointX="18.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_daily_element" Width="1.5" PointX="18.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_element" Width="1.5" PointX="18.75" PointY="18.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day" Width="1.5" PointX="20.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day_leap_yr" Width="1.5" PointX="0.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day_synoptime" Width="1.5" PointX="20.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day_synoptime_leap_yr" Width="1.5" PointX="20.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.station" Width="1.5" PointX="0.75" PointY="9.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.stationnetworkdefinition" Width="1.5" PointX="20.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.synopfeature" Width="1.5" PointX="20.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.tblproducts" Width="1.5" PointX="20.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.featuregeographicalposition" Width="1.5" PointX="20.75" PointY="18.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.observationfinal" Width="1.5" PointX="8" PointY="9.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.observationinitial" Width="1.5" PointX="6" PointY="3.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.physicalfeature" Width="1.5" PointX="5.25" PointY="13.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day_element" Width="1.5" PointX="2.75" PointY="21.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Climsoft4EDM.seq_month_day_element_leap_yr" Width="1.5" PointX="4.75" PointY="21.75" IsExpanded="true" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_instrument" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_instrument_instrumentFaultReport" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_station_instrumentFaultReport" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_maria_climsoft_db_v4_obselement_observationInitial" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_obselement_observationFinal" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_station_scheduleClass" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_station_featureClass" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.physicalFeatureidentification" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_maria_climsoft_db_v4_station_observationInitial" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_station_observationFinal" ManuallyRouted="false" />
+        <AssociationConnector Association="Climsoft4EDM.FK_mysql_climsoft_db_v4_stationFeature" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
