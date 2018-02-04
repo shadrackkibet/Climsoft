@@ -20,11 +20,15 @@
         'For Each stnItem As station In objStations
         '    dtbStations.Rows.Add(stnItem.stationName, stnItem.stationId, stnItem.stationId & " " & stnItem.stationName)
         'Next
-        cboValues.DataSource = dtbStations
-        ' May need ValueMember to be different in different instances e.g. if station name is needed as return value
-        cboValues.ValueMember = strStationID
-        If bFirstLoad Then
-            SetViewTypeAsStations()
+        If dtbStations.Rows.Count > 0 Then
+            cboValues.DataSource = dtbStations
+            ' May need ValueMember to be different in different instances e.g. if station name is needed as return value
+            cboValues.ValueMember = strStationID
+            If bFirstLoad Then
+                SetViewTypeAsStations()
+            End If
+        Else
+            cboValues.DataSource = Nothing
         End If
     End Sub
 
@@ -63,34 +67,60 @@
             'InitialiseStationDataTable()
             'SortByStationName()
             SetTable(strStationsTableName)
-            d.Add("Stations", New List(Of String)({strStationName}))
-            d.Add("IDs", New List(Of String)({strStationID}))
-            d.Add("IDs and Stations", New List(Of String)({strStationName, strStationID}))
+            d.Add(strStationName, New List(Of String)({strStationName}))
+            d.Add(strStationID, New List(Of String)({strStationID}))
+            d.Add(strIDsAndStations, New List(Of String)({strStationName, strStationID}))
             SetFields(d)
             PopulateStationList()
+            cboValues.ContextMenuStrip = cmsStation
             bFirstLoad = False
         End If
-    End Sub
-
-    Private Sub tsmStations_Click(sender As Object, e As EventArgs)
-        SetViewTypeAsStations()
-    End Sub
-
-    Private Sub tsmIDs_Click(sender As Object, e As EventArgs)
-        SetViewTypeAsIDs()
-    End Sub
-
-    Private Sub tsmStationsAndIDs_Click(sender As Object, e As EventArgs)
-        SetViewTypeAsIDsAndStations()
     End Sub
 
     Public Overrides Function ValidateSelection() As Boolean
         Return cboValues.Items.Contains(cboValues.Text)
     End Function
 
-    Private Sub tsmFilterStations_Click(sender As Object, e As EventArgs)
-        'dlgFilterStations.SetDataTable(dtbStations)
-        'dlgFilterStations.ShowDialog()
-        'PopulateStationList()
+    Private Sub cmsStation_Click(sender As Object, e As EventArgs) Handles cmsStation.Click
+        SetViewTypeAsStations()
+    End Sub
+
+    Private Sub cmsStationIDs_Click(sender As Object, e As EventArgs) Handles cmsStationIDs.Click
+        SetViewTypeAsIDs()
+    End Sub
+
+    Private Sub cmsStationIDAndStation_Click(sender As Object, e As EventArgs) Handles cmsStationIDAndStation.Click
+        SetViewTypeAsIDsAndStations()
+    End Sub
+
+    Private Sub cmsStationSortByID_Click(sender As Object, e As EventArgs) Handles cmsStationSortByID.Click
+        SortByID()
+    End Sub
+
+    Private Sub SortByID()
+        If dtbStations IsNot Nothing Then
+            dtbStations.DefaultView.Sort = strStationID & " ASC"
+            cmsStationSortByID.Checked = True
+            cmsStationSortyByName.Checked = False
+            PopulateStationList()
+        End If
+    End Sub
+
+    Private Sub cmsStationSortyByName_Click(sender As Object, e As EventArgs) Handles cmsStationSortyByName.Click
+        SortByStationName()
+    End Sub
+
+    Private Sub SortByStationName()
+        dtbStations.DefaultView.Sort = strStationName & " ASC"
+        cmsStationSortByID.Checked = False
+        cmsStationSortyByName.Checked = True
+        PopulateStationList()
+    End Sub
+
+    Private Sub cmsStationFilter_Click(sender As Object, e As EventArgs) Handles cmsFilterStations.Click
+        ' TODOD SetDataTable() in sdgFilter needs to be created
+        'sdgFilter.SetDataTable(dtbStations)
+        sdgFilter.ShowDialog()
+        PopulateStationList()
     End Sub
 End Class
