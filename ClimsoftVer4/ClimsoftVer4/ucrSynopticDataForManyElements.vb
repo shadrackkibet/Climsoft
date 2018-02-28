@@ -105,8 +105,7 @@ Public Class ucrSynopticDataManyElements
         ucrLinkedHour = ucrHourControl
     End Sub
 
-    Public Sub Clear()
-
+    Public Overrides Sub Clear()
         Dim ctr As Control
         Dim ctrVFP As ucrValueFlagPeriod
 
