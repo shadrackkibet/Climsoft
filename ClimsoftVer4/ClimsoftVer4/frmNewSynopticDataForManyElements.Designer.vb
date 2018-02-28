@@ -38,11 +38,6 @@ Partial Class frmNewSynopticDataForManyElements
         Me.btnDelete = New System.Windows.Forms.Button()
         Me.btnAddNew = New System.Windows.Forms.Button()
         Me.btnUpdate = New System.Windows.Forms.Button()
-        Me.btnMovePrevious = New System.Windows.Forms.Button()
-        Me.btnMoveFirst = New System.Windows.Forms.Button()
-        Me.btnMoveLast = New System.Windows.Forms.Button()
-        Me.recNumberTextBox = New System.Windows.Forms.TextBox()
-        Me.btnMoveNext = New System.Windows.Forms.Button()
         Me.btnClose = New System.Windows.Forms.Button()
         Me.ucrDay = New ClimsoftVer4.ucrDay()
         Me.ucrSynopticDataForManyElements = New ClimsoftVer4.ucrSynopticDataManyElements()
@@ -50,6 +45,7 @@ Partial Class frmNewSynopticDataForManyElements
         Me.ucrMonth = New ClimsoftVer4.ucrMonth()
         Me.ucrYearSelector = New ClimsoftVer4.ucrYearSelector()
         Me.ucrStationSelector = New ClimsoftVer4.ucrStationSelector()
+        Me.ucrSynopDataNavigation = New ClimsoftVer4.ucrNavigation()
         lblYear = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
@@ -100,7 +96,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnTDCF
         '
-        Me.btnTDCF.Location = New System.Drawing.Point(595, 574)
+        Me.btnTDCF.Location = New System.Drawing.Point(582, 603)
         Me.btnTDCF.Name = "btnTDCF"
         Me.btnTDCF.Size = New System.Drawing.Size(64, 23)
         Me.btnTDCF.TabIndex = 679
@@ -109,7 +105,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnView
         '
-        Me.btnView.Location = New System.Drawing.Point(519, 574)
+        Me.btnView.Location = New System.Drawing.Point(509, 603)
         Me.btnView.Name = "btnView"
         Me.btnView.Size = New System.Drawing.Size(64, 23)
         Me.btnView.TabIndex = 678
@@ -119,7 +115,7 @@ Partial Class frmNewSynopticDataForManyElements
         'btnUpload
         '
         Me.btnUpload.BackColor = System.Drawing.Color.Lime
-        Me.btnUpload.Location = New System.Drawing.Point(725, 603)
+        Me.btnUpload.Location = New System.Drawing.Point(732, 603)
         Me.btnUpload.Name = "btnUpload"
         Me.btnUpload.Size = New System.Drawing.Size(75, 23)
         Me.btnUpload.TabIndex = 677
@@ -129,7 +125,7 @@ Partial Class frmNewSynopticDataForManyElements
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(343, 609)
+        Me.Label5.Location = New System.Drawing.Point(352, 632)
         Me.Label5.Name = "Label5"
         Me.Label5.Size = New System.Drawing.Size(59, 13)
         Me.Label5.TabIndex = 676
@@ -137,7 +133,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'txtSequencer
         '
-        Me.txtSequencer.Location = New System.Drawing.Point(408, 606)
+        Me.txtSequencer.Location = New System.Drawing.Point(415, 629)
         Me.txtSequencer.Name = "txtSequencer"
         Me.txtSequencer.Size = New System.Drawing.Size(175, 20)
         Me.txtSequencer.TabIndex = 675
@@ -145,7 +141,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnHelp
         '
-        Me.btnHelp.Location = New System.Drawing.Point(747, 574)
+        Me.btnHelp.Location = New System.Drawing.Point(743, 574)
         Me.btnHelp.Name = "btnHelp"
         Me.btnHelp.Size = New System.Drawing.Size(64, 23)
         Me.btnHelp.TabIndex = 669
@@ -154,7 +150,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnClear
         '
-        Me.btnClear.Location = New System.Drawing.Point(443, 574)
+        Me.btnClear.Location = New System.Drawing.Point(433, 603)
         Me.btnClear.Name = "btnClear"
         Me.btnClear.Size = New System.Drawing.Size(64, 23)
         Me.btnClear.TabIndex = 667
@@ -163,7 +159,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnCommit
         '
-        Me.btnCommit.Location = New System.Drawing.Point(215, 574)
+        Me.btnCommit.Location = New System.Drawing.Point(213, 603)
         Me.btnCommit.Name = "btnCommit"
         Me.btnCommit.Size = New System.Drawing.Size(64, 23)
         Me.btnCommit.TabIndex = 663
@@ -172,7 +168,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnDelete
         '
-        Me.btnDelete.Location = New System.Drawing.Point(367, 574)
+        Me.btnDelete.Location = New System.Drawing.Point(360, 603)
         Me.btnDelete.Name = "btnDelete"
         Me.btnDelete.Size = New System.Drawing.Size(64, 23)
         Me.btnDelete.TabIndex = 666
@@ -181,7 +177,7 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnAddNew
         '
-        Me.btnAddNew.Location = New System.Drawing.Point(139, 574)
+        Me.btnAddNew.Location = New System.Drawing.Point(143, 603)
         Me.btnAddNew.Name = "btnAddNew"
         Me.btnAddNew.Size = New System.Drawing.Size(64, 23)
         Me.btnAddNew.TabIndex = 665
@@ -190,63 +186,16 @@ Partial Class frmNewSynopticDataForManyElements
         '
         'btnUpdate
         '
-        Me.btnUpdate.Location = New System.Drawing.Point(291, 574)
+        Me.btnUpdate.Location = New System.Drawing.Point(288, 603)
         Me.btnUpdate.Name = "btnUpdate"
         Me.btnUpdate.Size = New System.Drawing.Size(64, 23)
         Me.btnUpdate.TabIndex = 664
         Me.btnUpdate.Text = "Update"
         Me.btnUpdate.UseVisualStyleBackColor = True
         '
-        'btnMovePrevious
-        '
-        Me.btnMovePrevious.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnMovePrevious.Location = New System.Drawing.Point(405, 545)
-        Me.btnMovePrevious.Name = "btnMovePrevious"
-        Me.btnMovePrevious.Size = New System.Drawing.Size(46, 23)
-        Me.btnMovePrevious.TabIndex = 674
-        Me.btnMovePrevious.Text = "<<"
-        Me.btnMovePrevious.UseVisualStyleBackColor = True
-        '
-        'btnMoveFirst
-        '
-        Me.btnMoveFirst.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnMoveFirst.Location = New System.Drawing.Point(358, 545)
-        Me.btnMoveFirst.Name = "btnMoveFirst"
-        Me.btnMoveFirst.Size = New System.Drawing.Size(41, 23)
-        Me.btnMoveFirst.TabIndex = 673
-        Me.btnMoveFirst.Text = "|<<"
-        Me.btnMoveFirst.UseVisualStyleBackColor = True
-        '
-        'btnMoveLast
-        '
-        Me.btnMoveLast.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnMoveLast.Location = New System.Drawing.Point(648, 545)
-        Me.btnMoveLast.Name = "btnMoveLast"
-        Me.btnMoveLast.Size = New System.Drawing.Size(41, 23)
-        Me.btnMoveLast.TabIndex = 672
-        Me.btnMoveLast.Text = ">>|"
-        Me.btnMoveLast.UseVisualStyleBackColor = True
-        '
-        'recNumberTextBox
-        '
-        Me.recNumberTextBox.Location = New System.Drawing.Point(457, 547)
-        Me.recNumberTextBox.Name = "recNumberTextBox"
-        Me.recNumberTextBox.Size = New System.Drawing.Size(141, 20)
-        Me.recNumberTextBox.TabIndex = 671
-        '
-        'btnMoveNext
-        '
-        Me.btnMoveNext.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnMoveNext.Location = New System.Drawing.Point(604, 545)
-        Me.btnMoveNext.Name = "btnMoveNext"
-        Me.btnMoveNext.Size = New System.Drawing.Size(38, 23)
-        Me.btnMoveNext.TabIndex = 670
-        Me.btnMoveNext.Text = ">>"
-        Me.btnMoveNext.UseVisualStyleBackColor = True
-        '
         'btnClose
         '
-        Me.btnClose.Location = New System.Drawing.Point(671, 574)
+        Me.btnClose.Location = New System.Drawing.Point(662, 603)
         Me.btnClose.Name = "btnClose"
         Me.btnClose.Size = New System.Drawing.Size(64, 23)
         Me.btnClose.TabIndex = 668
@@ -295,11 +244,20 @@ Partial Class frmNewSynopticDataForManyElements
         Me.ucrStationSelector.Size = New System.Drawing.Size(184, 24)
         Me.ucrStationSelector.TabIndex = 210
         '
+        'ucrSynopDataNavigation
+        '
+        Me.ucrSynopDataNavigation.Location = New System.Drawing.Point(314, 557)
+        Me.ucrSynopDataNavigation.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.ucrSynopDataNavigation.Name = "ucrSynopDataNavigation"
+        Me.ucrSynopDataNavigation.Size = New System.Drawing.Size(336, 25)
+        Me.ucrSynopDataNavigation.TabIndex = 680
+        '
         'frmNewSynopticDataForManyElements
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(950, 631)
+        Me.ClientSize = New System.Drawing.Size(950, 654)
+        Me.Controls.Add(Me.ucrSynopDataNavigation)
         Me.Controls.Add(Me.btnTDCF)
         Me.Controls.Add(Me.btnView)
         Me.Controls.Add(Me.btnUpload)
@@ -311,11 +269,6 @@ Partial Class frmNewSynopticDataForManyElements
         Me.Controls.Add(Me.btnDelete)
         Me.Controls.Add(Me.btnAddNew)
         Me.Controls.Add(Me.btnUpdate)
-        Me.Controls.Add(Me.btnMovePrevious)
-        Me.Controls.Add(Me.btnMoveFirst)
-        Me.Controls.Add(Me.btnMoveLast)
-        Me.Controls.Add(Me.recNumberTextBox)
-        Me.Controls.Add(Me.btnMoveNext)
         Me.Controls.Add(Me.btnClose)
         Me.Controls.Add(Me.ucrDay)
         Me.Controls.Add(Me.ucrSynopticDataForManyElements)
@@ -360,10 +313,6 @@ Partial Class frmNewSynopticDataForManyElements
     Friend WithEvents btnDelete As Button
     Friend WithEvents btnAddNew As Button
     Friend WithEvents btnUpdate As Button
-    Friend WithEvents btnMovePrevious As Button
-    Friend WithEvents btnMoveFirst As Button
-    Friend WithEvents btnMoveLast As Button
-    Friend WithEvents recNumberTextBox As TextBox
-    Friend WithEvents btnMoveNext As Button
     Friend WithEvents btnClose As Button
+    Friend WithEvents ucrSynopDataNavigation As ucrNavigation
 End Class
