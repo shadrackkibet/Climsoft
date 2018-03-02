@@ -174,12 +174,6 @@
     <Compile Include="data_forms.vb">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
-    <Compile Include="frmNewHourlyWind.Designer.vb">
-      <DependentUpon>frmNewHourlyWind.vb</DependentUpon>
-    </Compile>
-    <Compile Include="frmNewHourlyWind.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="frmNewHourly.Designer.vb">
       <DependentUpon>frmNewHourly.vb</DependentUpon>
     </Compile>
@@ -853,9 +847,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="frmNewHourlyWind.resx">
-      <DependentUpon>frmNewHourlyWind.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="frmNewHourly.resx">
       <DependentUpon>frmNewHourly.vb</DependentUpon>
     </EmbeddedResource>

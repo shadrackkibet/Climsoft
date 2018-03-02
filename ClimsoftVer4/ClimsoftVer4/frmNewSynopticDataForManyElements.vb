@@ -23,7 +23,13 @@
         ucrSynopDataNavigation.SetFields(dctNavigationFields)
         ucrSynopDataNavigation.SetTableName("form_synoptic_2_ra_1")
 
-        AssignLinkToKeyField(ucrSynopDataNavigation)
+        dctNavigationKeyControls.Add("stationId", ucrStationSelector)
+        dctNavigationKeyControls.Add("yyyy", ucrYearSelector)
+        dctNavigationKeyControls.Add("mm", ucrMonth)
+        dctNavigationKeyControls.Add("dd", ucrDay)
+        dctNavigationKeyControls.Add("hh", ucrHour)
+
+        ucrSynopDataNavigation.SetKeyControls(dctNavigationKeyControls)
         ucrSynopDataNavigation.PopulateControl()
     End Sub
 

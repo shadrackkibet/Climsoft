@@ -85,6 +85,7 @@ Partial Class frmLogin
         Me.txtUsername.Size = New System.Drawing.Size(220, 20)
         Me.txtUsername.TabIndex = 1
         Me.txtUsername.Tag = ""
+        Me.txtUsername.Text = "root"
         '
         'txtPassword
         '
@@ -94,6 +95,7 @@ Partial Class frmLogin
         Me.txtPassword.Size = New System.Drawing.Size(220, 20)
         Me.txtPassword.TabIndex = 3
         Me.txtPassword.Tag = ""
+        Me.txtPassword.Text = "admin"
         '
         'OK
         '
