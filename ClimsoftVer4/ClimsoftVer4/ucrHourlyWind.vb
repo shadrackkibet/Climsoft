@@ -7,27 +7,26 @@ Public Class ucrHourlyWind
     Private strSpeedFieldName As String = "elem_111_"
     Private strFlagFieldName As String = "ddflag"
     Private strTotalFieldName As String = "total"
-    Private iSpeedTotalRequired As Integer
+    Private bSpeedTotalRequired As Boolean
     Private bSelectAllHours As Boolean
-    'Private lstDirectionSpeedFlagControls As List(Of ucrDirectionSpeedFlag)
-    'Private lstTextboxControls As List(Of ucrTextBox)
     Private lstFields As New List(Of String)
     Public fhourlyWindRecord As form_hourlywind
     Public bUpdating As Boolean = False
     Private ucrLinkedNavigation As ucrNavigation
+    Private ucrLinkedStation As ucrStationSelector
+    Private ucrLinkedYear As ucrYearSelector
+    Private ucrLinkedMonth As ucrMonth
+    Private ucrLinkedDay As ucrDay
 
     Private Sub ucrHourlyWind_Load(sender As Object, e As EventArgs) Handles Me.Load
         Dim ucrDSF As ucrDirectionSpeedFlag
         Dim ucrText As ucrTextBox
 
         If bFirstLoad Then
-            'lstDirectionSpeedFlagControls = New List(Of ucrDirectionSpeedFlag)
-            'lstTextboxControls = New List(Of ucrTextBox)
             For Each ctr As Control In Me.Controls
                 If TypeOf ctr Is ucrDirectionSpeedFlag Then
                     ucrDSF = DirectCast(ctr, ucrDirectionSpeedFlag)
                     ucrDSF.SetTableNameAndDirectionSpeedFlagFields(strTableName, strDirectionFieldName & ucrDSF.Tag, strSpeedFieldName & ucrDSF.Tag, strFlagFieldName & ucrDSF.Tag)
-                    'lstDirectionSpeedFlagControls.Add(ucrDSF)
                     lstFields.Add(strDirectionFieldName & ucrDSF.Tag)
                     lstFields.Add(strSpeedFieldName & ucrDSF.Tag)
                     lstFields.Add(strFlagFieldName & ucrDSF.Tag)
@@ -38,7 +37,6 @@ Public Class ucrHourlyWind
                 ElseIf TypeOf ctr Is ucrTextBox Then
                     ucrText = DirectCast(ctr, ucrTextBox)
                     ucrText.SetTableNameAndField(strTableName, strTotalFieldName)
-                    'lstTextboxControls.Add(ucrText)
                     lstFields.Add(strTotalFieldName)
                     AddHandler ucrText.evtValueChanged, AddressOf InnerControlValueChanged
                 End If
@@ -63,9 +61,11 @@ Public Class ucrHourlyWind
                 Else
                     bUpdating = True
                 End If
+                'enable or disable textboxes based on year month day
+                ValidateDataEntryPermission()
             End If
 
-            For Each ctr In Me.Controls
+            For Each ctr As Control In Me.Controls
                 If TypeOf ctr Is ucrDirectionSpeedFlag Then
                     DirectCast(ctr, ucrDirectionSpeedFlag).SetValue(New List(Of Object)({GetValue(strDirectionFieldName & ctr.Tag), GetValue(strSpeedFieldName & ctr.Tag), GetValue(strFlagFieldName & ctr.Tag)}))
                 ElseIf TypeOf ctr Is ucrTextBox Then
@@ -73,12 +73,7 @@ Public Class ucrHourlyWind
                 End If
             Next
 
-            'For Each ucrDSF In lstDirectionSpeedFlagControls
-            '    ucrDSF.SetValue(New List(Of Object)({GetValue(strDirectionFieldName & ucrDSF.Tag), GetValue(strSpeedFieldName & ucrDSF.Tag), GetValue(strFlagFieldName & ucrDSF.Tag)}))
-            'Next
-            'For Each ucrText  In lstTextboxControls
-            '    ucrText.SetValue(GetValue(strTotalFieldName))
-            'Next
+
         End If
     End Sub
 
@@ -130,9 +125,6 @@ Public Class ucrHourlyWind
         ucrLinkedNavigation.UpdateNavigationByKeyControls()
     End Sub
 
-    Public Sub SetLinkedNavigation(ucrNewNavigation As ucrNavigation)
-        ucrLinkedNavigation = ucrNewNavigation
-    End Sub
 
     Public Sub SaveRecord()
         'THIS CAN NOW BE PUSHED TO clsDataConnection CLASS
@@ -195,14 +187,6 @@ Public Class ucrHourlyWind
                             ucrDSF.Enabled = False
                             ucrDSF.SetBackColor(Color.LightYellow)
                         End If
-                        'SIMILAR IMPLEMENTATION WOULD AS ABOVE WOULD BE AS COMMENTED BELOW
-                        'For Each rTemp As DataRow In dtbl.Rows
-                        '    If Val(rTemp("hh")) = iTagVal AndAlso Val(rTemp("hh_selection")) = 0 Then
-                        '        ucrDSF.enabled = False
-                        '        ucrDSF.SetBackColor(Color.LightYellow)
-                        '        Exit For
-                        '    End If
-                        'Next
                     End If
                 Next
             End If
@@ -212,7 +196,7 @@ Public Class ucrHourlyWind
     Public Sub SetDirectionDigits(iNewDirectionDigits As Integer)
         For Each ctr As Control In Me.Controls
             If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                DirectCast(ctr, ucrDirectionSpeedFlag).SetDirectionDigits(iNewDirectionDigits)
+                DirectCast(ctr, ucrDirectionSpeedFlag).SetElementDirectionDigits(iNewDirectionDigits)
             End If
         Next
     End Sub
@@ -220,12 +204,13 @@ Public Class ucrHourlyWind
     Public Sub SetSpeedDigits(iNewSpeedDigits As Integer)
         For Each ctr As Control In Me.Controls
             If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                DirectCast(ctr, ucrDirectionSpeedFlag).SetSpeedDigits(iNewSpeedDigits)
+                DirectCast(ctr, ucrDirectionSpeedFlag).SetElementSpeedDigits(iNewSpeedDigits)
             End If
         Next
     End Sub
 
     Public Sub SetDirectionValidation(elementId As Integer)
+        Dim ucrDSF As ucrDirectionSpeedFlag
         Dim clsDataDefinition As DataCall
         Dim dtbl As DataTable
         clsDataDefinition = New DataCall
@@ -238,60 +223,93 @@ Public Class ucrHourlyWind
         If dtbl IsNot Nothing AndAlso dtbl.Rows.Count > 0 Then
             For Each ctr As Control In Me.Controls
                 If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                    DirectCast(ctr, ucrDirectionSpeedFlag).SetDirectionValidation(Val(dtbl.Rows(0).Item("lowerLimit")), Val(dtbl.Rows(0).Item("upperLimit")))
+                    ucrDSF = ctr
+                    If dtbl.Rows(0).Item("lowerLimit") <> "" Then
+                        ucrDSF.SetElementDirectionValidation(iLowerLimit:=Val(dtbl.Rows(0).Item("lowerLimit")))
+                    End If
+                    If dtbl.Rows(0).Item("upperLimit") <> "" Then
+                        ucrDSF.SetElementDirectionValidation(iUpperLimit:=Val(dtbl.Rows(0).Item("upperLimit")))
+                    End If
                 End If
             Next
         End If
     End Sub
 
     Public Sub SetSpeedValidation(elementId As Integer)
+        Dim ucrDSF As ucrDirectionSpeedFlag
         Dim clsDataDefinition As DataCall
         Dim dtbl As DataTable
         clsDataDefinition = New DataCall
         'PLEASE NOTE THIS TABLE IS CALLED obselement IN THE DATABASE BUT
         'THE GENERATED ENTITY MODEL HAS NAMED IT AS obselements
         clsDataDefinition.SetTableName("obselements")
-        clsDataDefinition.SetFields(New List(Of String)({"lowerLimit", "upperLimit", "QCTotalRequired"}))
+        clsDataDefinition.SetFields(New List(Of String)({"lowerLimit", "upperLimit", "qcTotalRequired"}))
         clsDataDefinition.SetFilter("elementId", "=", elementId, bForceValuesAsString:=False)
         dtbl = clsDataDefinition.GetDataTable()
         If dtbl IsNot Nothing AndAlso dtbl.Rows.Count > 0 Then
             For Each ctr As Control In Me.Controls
                 If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                    DirectCast(ctr, ucrDirectionSpeedFlag).SetSpeedValidation(Val(dtbl.Rows(0).Item("lowerLimit")), Val(dtbl.Rows(0).Item("upperLimit")))
+                    ucrDSF = ctr
+                    If dtbl.Rows(0).Item("lowerLimit") <> "" Then
+                        ucrDSF.SetElementSpeedValidation(iLowerLimit:=Val(dtbl.Rows(0).Item("lowerLimit")))
+                    End If
+                    If dtbl.Rows(0).Item("upperLimit") <> "" Then
+                        ucrDSF.SetElementSpeedValidation(iUpperLimit:=Val(dtbl.Rows(0).Item("upperLimit")))
+                    End If
                 End If
             Next
-            iSpeedTotalRequired = Val(dtbl.Rows(0).Item("QCTotalRequired"))
+            bSpeedTotalRequired = If(dtbl.Rows(0).Item("qcTotalRequired") <> "" AndAlso Val(dtbl.Rows(0).Item("qcTotalRequired") <> 0), True, False)
         End If
     End Sub
-
+    ''' <summary>
+    ''' Returns true if all the direction values are empty and false if ANY has a value set
+    ''' </summary>
+    ''' <returns></returns>
     Public Function IsDirectionValuesEmpty() As Boolean
+        For Each ctr As Control In Me.Controls
+            If TypeOf ctr Is ucrDirectionSpeedFlag Then
+                If Not DirectCast(ctr, ucrDirectionSpeedFlag).IsElementDirectionEmpty() Then
+                    Return False
+                End If
+            End If
+        Next
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' Returns true if all the speed values are empty and false if ANY has a value set
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function IsSpeedValuesEmpty() As Boolean
+        For Each ctr As Control In Me.Controls
+            If TypeOf ctr Is ucrDirectionSpeedFlag Then
+                If Not DirectCast(ctr, ucrDirectionSpeedFlag).IsElementSpeedEmpty Then
+                    Return False
+                End If
+            End If
+        Next
+        Return True
+    End Function
+
+
+    ''' <summary>
+    ''' returns true if all direction values are valid and false if any of them is not valid
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function IsValuesValid() As Boolean
         Dim ucrDSF As ucrDirectionSpeedFlag
         For Each ctr As Control In Me.Controls
             If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                ucrDSF = ctr
-                If (Not ucrDSF.IsDirectionEmpty()) AndAlso IsNumeric(ucrDSF.GetDirectionValue) Then
+                ucrDSF = DirectCast(ctr, ucrDirectionSpeedFlag)
+                If Not ucrDSF.IsElementDirectionValueValid Then
+                    ucrDSF.ucrDirection.GetFocus()
                     Return False
-                End If
-            End If
-        Next
-        Return True
-    End Function
-
-    Public Function QcForDirection() As Boolean
-        For Each ctr As Control In Me.Controls
-            If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                If Not DirectCast(ctr, ucrDirectionSpeedFlag).QcForDirection() Then
+                ElseIf Not ucrDSF.IsElementSpeedValueValid
+                    ucrDSF.ucrSpeed.GetFocus()
                     Return False
-                End If
-            End If
-        Next
-        Return True
-    End Function
-
-    Public Function CheckQcForSpeed() As Boolean
-        For Each ctr As Control In Me.Controls
-            If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                If Not DirectCast(ctr, ucrDirectionSpeedFlag).CheckQcForSpeed() Then
+                ElseIf Not ucrDSF.IsElementFlagValueValid
+                    'because Flag is read only
+                    ucrDSF.Focus()
                     Return False
                 End If
             End If
@@ -300,38 +318,96 @@ Public Class ucrHourlyWind
     End Function
 
     Private Sub ucrInputTotal_Leave(sender As Object, e As EventArgs) Handles ucrInputTotal.Leave
-        checkTotal()
+        checkSpeedTotal()
     End Sub
 
-    Public Function checkTotal() As Boolean
+    ''' <summary>
+    ''' will check the expected total if its indicated as required in the obselements table
+    ''' returns true if the expected total speed value = computed total speed value or when the speed total is not required
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function checkSpeedTotal() As Boolean
+        Dim bValueCorrect As Boolean = False
         Dim elemTotal As Integer = 0
         Dim expectedTotal As Integer
 
-        If iSpeedTotalRequired = 1 Then
-
-            expectedTotal = Val(ucrInputTotal.GetValue)
-
-            For Each ctr As Control In Me.Controls
-                If TypeOf ctr Is ucrDirectionSpeedFlag Then
-                    elemTotal = elemTotal + Val(DirectCast(ctr, ucrDirectionSpeedFlag).GetFlagValue)
-                End If
-            Next
-
-            If elemTotal = expectedTotal Then
-                Return True
-            Else
-                MessageBox.Show("Value in [Total] textbox is different from that calculated by computer!", "Error in total")
-                ucrInputTotal.GetFocus()
+        If bSpeedTotalRequired Then
+            If ucrInputTotal.IsEmpty AndAlso Not IsSpeedValuesEmpty() Then
+                MessageBox.Show("Please enter the Total Value in the (Total [ff]) textbox.", "Error in total", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 ucrInputTotal.SetBackColor(Color.Cyan)
-                Return False
+                bValueCorrect = False
+            Else
+                expectedTotal = Val(ucrInputTotal.GetValue)
+                For Each ctr As Control In Me.Controls
+                    If TypeOf ctr Is ucrDirectionSpeedFlag Then
+                        elemTotal = elemTotal + Val(DirectCast(ctr, ucrDirectionSpeedFlag).GetElementSpeedValue)
+                    End If
+                Next
+                bValueCorrect = (elemTotal = expectedTotal)
+                If Not bValueCorrect Then
+                    MessageBox.Show("Value in (Total [ff]) textbox is different from that calculated by computer! The computed total is " & elemTotal, "Error in total", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    ucrInputTotal.SetBackColor(Color.Cyan)
+                End If
             End If
         Else
-            Return True
+            bValueCorrect = True
         End If
+
+        Return bValueCorrect
     End Function
 
+    ''' <summary>
+    ''' Sets the controls used by this control station,year,month,day and ucrNavigation controls 
+    ''' </summary>
+    ''' <param name="ucrStationControl"></param>
+    ''' <param name="ucrYearControl"></param>
+    ''' <param name="ucrMonthControl"></param>
+    ''' <param name="ucrDayControl"></param>
+    ''' <param name="ucrNavigationControl"></param>
+    Public Sub SetKeyControls(ucrStationControl As ucrStationSelector, ucrYearControl As ucrYearSelector, ucrMonthControl As ucrMonth, ucrDayControl As ucrDay, ucrNavigationControl As ucrNavigation)
+        ucrLinkedStation = ucrStationControl
+        ucrLinkedYear = ucrYearControl
+        ucrLinkedMonth = ucrMonthControl
+        ucrLinkedDay = ucrDayControl
+        ucrLinkedNavigation = ucrNavigationControl
 
-    Private Sub ucrDirectionSpeedFlag0_KeyDown(sender As Object, e As KeyEventArgs) Handles ucrDirectionSpeedFlag0.KeyDown
+        AddLinkedControlFilters(ucrLinkedStation, "stationId", "==", strLinkedFieldName:="stationId", bForceValuesAsString:=True)
+        AddLinkedControlFilters(ucrLinkedYear, "yyyy", "==", strLinkedFieldName:="Year", bForceValuesAsString:=False)
+        AddLinkedControlFilters(ucrLinkedMonth, "mm", "==", strLinkedFieldName:="MonthId", bForceValuesAsString:=False)
+        AddLinkedControlFilters(ucrLinkedDay, "dd", "==", strLinkedFieldName:="day", bForceValuesAsString:=False)
 
+        ucrLinkedNavigation.SetTableNameAndFields(strTableName, (New List(Of String)({"stationId", "yyyy", "mm", "dd"})))
+        ucrLinkedNavigation.SetKeyControls("stationId", ucrLinkedStation)
+        ucrLinkedNavigation.SetKeyControls("yyyy", ucrLinkedYear)
+        ucrLinkedNavigation.SetKeyControls("mm", ucrLinkedMonth)
+        ucrLinkedNavigation.SetKeyControls("dd", ucrLinkedDay)
     End Sub
+
+    ''' <summary>
+    ''' checks the selected year month day to permit entry or not.
+    ''' this prevents data entry of current and future dates
+    ''' </summary>
+    Private Sub ValidateDataEntryPermission()
+        'if its an update or any of the linked year,month and day selector is nothing then just exit the sub
+        If bUpdating OrElse ucrLinkedYear Is Nothing OrElse ucrLinkedMonth Is Nothing OrElse ucrLinkedDay Is Nothing Then
+            Exit Sub
+        End If
+
+        Dim todayDate As Date
+        Dim selectedDate As Date
+
+        'initialise the dates with ONLY year month and day values. 
+        'Neglect the time factor
+        todayDate = New Date(Date.Now.Year, Date.Now.Month, Date.Now.Day)
+        selectedDate = New Date(ucrLinkedYear.GetValue, ucrLinkedMonth.GetValue, ucrLinkedDay.GetValue)
+
+        'if selectedDate is earlier than todayDate enable control
+        If DateTime.Compare(selectedDate, todayDate) < 0 Then
+            Me.Enabled = True
+        Else
+            'if it is same time (0) or later than (>0) disable control
+            Me.Enabled = False
+        End If
+    End Sub
+
 End Class
