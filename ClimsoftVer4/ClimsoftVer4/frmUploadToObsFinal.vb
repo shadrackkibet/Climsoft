@@ -339,13 +339,12 @@
         'lblTableRecords.Refresh()
 
         'Upload data to observationInitial table
-        Dim strSQL As String, stnId As String, elemCode As Integer, obsDate As String, obsVal As String, obsFlag, mark1 As String, _
-            qcStatus As Integer, acquisitionType As Integer, obsLevel As String, yyyy As Integer, mm As String, dd As String, hh As String
+        Dim strSQL, stnId, elemCode, obsVal, obsFlag, mark1, qcStatus, obsLevel, obsDate, mm, dd, hh, mnt, ss As String
+        Dim acquisitionType, yyyy As Integer
 
         Dim ds As New DataSet
         Dim maxRows As Integer
         Dim beginYear As Integer, endYear As Integer, beginMonth As Integer, endMonth As Integer
-
 
         Try
 
@@ -409,7 +408,6 @@
                 If chkAllElements.Checked = False And chkAllStations.Checked = False Then stnelm_selected = stnlist & " and " & elmlist & " and "
             End If
 
-
             beginYear = Val(txtBeginYear.Text)
             endYear = Val(txtEndYear.Text)
             beginMonth = Val(txtBeginMonth.Text)
@@ -462,9 +460,9 @@
             elemMaxRows = ds1.Tables("elemScale").Rows.Count
             'MsgBox("Number of elements: " & elemMaxRows)
 
-
             'Loop through all records in dataset
             For n = 0 To maxRows - 1
+
                 lblTableRecords.Text = "Uploading records with qcStatus=1"
                 lblTableRecords.Refresh()
                 'Display progress of data transfer
@@ -476,15 +474,30 @@
                 hh = ""
                 yyyy = DateAndTime.Year(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
                 mm = Month(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
+
                 If Val(mm) < 10 Then mm = "0" & mm
                 If Val(dd) < 10 Then dd = "0" & dd
                 If Val(hh) < 10 Then hh = "0" & hh
+
                 dd = Microsoft.VisualBasic.DateAndTime.Day(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
                 hh = Hour(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
-                obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":00:00"
+                mnt = Minute(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
+                ss = Second(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
+
+                ''obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":00:00"
+
+                ' Code improved to include minutes and seconds in the datetime string
+                obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":" & mnt & ":" & ss
+
                 stnId = ds.Tables("obsInitial").Rows(n).Item("recordedFrom")
                 elemCode = ds.Tables("obsInitial").Rows(n).Item("describedBy")
-                mark1 = ds.Tables("obsInitial").Rows(n).Item("mark")
+                If Not IsDBNull(ds.Tables("obsInitial").Rows(n).Item("mark")) Then
+                    mark1 = ds.Tables("obsInitial").Rows(n).Item("mark")
+                Else
+                    mark1 = 0
+                End If
+
+
                 'Get the element scale
 
                 For k = 0 To elemMaxRows - 1
@@ -492,17 +505,33 @@
                 Next k
 
                 obsLevel = ds.Tables("obsInitial").Rows(n).Item("obslevel")
-                obsVal = ds.Tables("obsInitial").Rows(n).Item("obsValue")
-                obsVal = obsVal * valScale
+
+                'Types of bservation values
+                If IsDBNull(ds.Tables("obsInitial").Rows(n).Item("obsValue")) Then ' In case of NULL for obs values
+                    obsVal = "NULL"
+                    obsFlag = "M"
+                ElseIf Len(ds.Tables("obsInitial").Rows(n).Item("obsValue")) = 0 Then ' In case of Blanks for obs values
+                    obsVal = "NULL"
+                    obsFlag = "M"
+                Else
+                    obsVal = ds.Tables("obsInitial").Rows(n).Item("obsValue")
+                    obsVal = obsVal * valScale
+                End If
+
                 If Not IsDBNull(ds.Tables("obsInitial").Rows(n).Item("flag")) Then obsFlag = ds.Tables("obsInitial").Rows(n).Item("flag")
                 If Not IsDBNull(ds.Tables("obsInitial").Rows(n).Item("qcStatus")) Then qcStatus = ds.Tables("obsInitial").Rows(n).Item("qcStatus")
                 If Not IsDBNull(ds.Tables("obsInitial").Rows(n).Item("acquisitionType")) Then acquisitionType = ds.Tables("obsInitial").Rows(n).Item("acquisitionType")
 
                 'Generate SQL string for inserting data into observationFinal table
+
                 strSQL = "INSERT IGNORE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType,mark) " & _
                     "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," & _
                     qcStatus & "," & acquisitionType & "," & mark1 & ")"
 
+                'strSQL = "INSERT IGNORE INTO observationFinal(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,Flag,qcStatus,acquisitionType) " & _
+                '    "VALUES ('" & stnId & "'," & elemCode & ",'" & obsDate & "','" & obsLevel & "'," & obsVal & ",'" & obsFlag & "'," & _
+                '    qcStatus & "," & acquisitionType & ")"
+                'MsgBox(strSQL)
                 ' Create the Command for executing query and set its properties
                 objCmd = New MySql.Data.MySqlClient.MySqlCommand(strSQL, conn)
                 objCmd.CommandTimeout = 0
@@ -516,6 +545,7 @@
                 'End Try
 
                 'Move to next record in dataset
+
             Next n
 
             conn.Close()
@@ -555,7 +585,7 @@
             'Catch ex As Exception
             '    If ex.HResult <> -2147024882 Then MsgBox(ex.Message)
             'End Try
-
+            'MsgBox(7)
             For n = 0 To maxRows - 1
                 lblTableRecords.Text = "Uploading records with qcStatus=2"
                 lblTableRecords.Refresh()
@@ -580,7 +610,14 @@
                 If Val(hh) < 10 Then hh = "0" & hh
                 dd = Microsoft.VisualBasic.DateAndTime.Day(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
                 hh = Hour(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
-                obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":00:00"
+                mnt = Minute(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
+                ss = Second(ds.Tables("obsInitial").Rows(n).Item("obsDatetime"))
+
+                'obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":00:00"
+
+                ' Code improved to include minutes and seconds in the datetime string
+                obsDate = yyyy & "-" & mm & "-" & dd & " " & hh & ":" & mnt & ":" & ss
+
                 stnId = ds.Tables("obsInitial").Rows(n).Item("recordedFrom")
                 elemCode = ds.Tables("obsInitial").Rows(n).Item("describedBy")
 
@@ -616,7 +653,7 @@
 
                 'Move to next record in dataset
             Next n
-
+            'MsgBox(8)
         Catch ex As Exception
             MsgBox(ex.Message)
             lblTableRecords.ForeColor = Color.Red

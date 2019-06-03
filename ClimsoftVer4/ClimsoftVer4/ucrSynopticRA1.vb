@@ -3,10 +3,11 @@ Imports System.Linq.Dynamic
 
 Public Class ucrSynopticRA1
     Private bFirstLoad As Boolean = True
-    Private strTableName As String = "form_synoptic_2_RA1"
+    Private strTableName As String = "form_synoptic_2_ra1"
     Private strValueFieldName As String = "Val_Elem"
     Private strFlagFieldName As String = "Flag"
-    Public bUpdating As Boolean = False
+    'Set to True by default
+    Public bUpdating As Boolean = True
     Public fs2ra1Record As form_synoptic_2_ra1
 
     Private lstFields As New List(Of String)
@@ -28,20 +29,27 @@ Public Class ucrSynopticRA1
     'Stores default Geopotential standard pressure level
     Private iStandardPressureLevel As Integer
 
+    Public bAutoFillValues As Boolean = True
+
     Private Sub ucrSynopticRA1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Dim ctrVFP As ucrValueFlagPeriod
+        Dim ucrVFP As ucrValueFlagPeriod
+        Dim vfpContextMenuStrip As ContextMenuStrip
 
         If bFirstLoad Then
+            vfpContextMenuStrip = SetUpContextMenuStrip()
+
             For Each ctr As Control In Me.Controls
                 If TypeOf ctr Is ucrValueFlagPeriod Then
-                    ctrVFP = DirectCast(ctr, ucrValueFlagPeriod)
-                    ctrVFP.ucrPeriod.Visible = False
-                    ctrVFP.SetTableNameAndValueFlagFields(strTableName, strValueFieldName:=strValueFieldName & ctrVFP.Tag, strFlagFieldName:=strFlagFieldName & ctrVFP.Tag)
-                    lstFields.Add(strValueFieldName & ctrVFP.Tag)
-                    lstFields.Add(strFlagFieldName & ctrVFP.Tag)
-                    AddHandler ctrVFP.ucrValue.evtValueChanged, AddressOf InnerControlValueChanged
-                    AddHandler ctrVFP.ucrFlag.evtValueChanged, AddressOf InnerControlValueChanged
-                    AddHandler ctrVFP.evtGoToNextVFPControl, AddressOf GoToNextVFPControl
+                    ucrVFP = DirectCast(ctr, ucrValueFlagPeriod)
+                    ucrVFP.ucrPeriod.Visible = False
+                    ucrVFP.SetTableNameAndValueFlagFields(strTableName, strValueFieldName & ucrVFP.Tag, strFlagFieldName & ucrVFP.Tag)
+                    lstFields.Add(strValueFieldName & ucrVFP.Tag)
+                    lstFields.Add(strFlagFieldName & ucrVFP.Tag)
+                    AddHandler ucrVFP.ucrValue.evtValueChanged, AddressOf InnerControlValueChanged
+                    AddHandler ucrVFP.ucrFlag.evtValueChanged, AddressOf InnerControlValueChanged
+                    AddHandler ucrVFP.evtGoToNextVFPControl, AddressOf GoToNextVFPControl
+
+                    ucrVFP.SetContextMenuStrip(vfpContextMenuStrip)
                 End If
             Next
             SetTableNameAndFields(strTableName, lstFields)
@@ -51,26 +59,49 @@ Public Class ucrSynopticRA1
             SetValueValidation()
             bFirstLoad = False
         End If
+
     End Sub
 
     Public Overrides Sub PopulateControl()
+
         Dim clsCurrentFilter As TableFilter
+        Dim tempRecord As form_synoptic_2_ra1
 
         If Not bFirstLoad Then
-            MyBase.PopulateControl()
+            'TODO. the try catch can be removed later after the table has been fixed
+            Try
+                MyBase.PopulateControl()
+            Catch ex As Exception
+                MessageBox.Show("Error: " & ex.Message, "Populate Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            End Try
 
-            If fs2ra1Record Is Nothing Then
-                clsCurrentFilter = GetLinkedControlsFilter()
-                fs2ra1Record = clsDataConnection.db.form_synoptic_2_ra1.Where(clsCurrentFilter.GetLinqExpression()).FirstOrDefault()
-                If fs2ra1Record Is Nothing Then
-                    fs2ra1Record = New form_synoptic_2_ra1
-                    bUpdating = False
-                Else
-                    bUpdating = True
-                End If
-                'enable or disable textboxes based on year month day
+            'try to get the record based on the given filter
+            clsCurrentFilter = GetLinkedControlsFilter()
+            tempRecord = clsDataConnection.db.form_synoptic_2_ra1.Where(clsCurrentFilter.GetLinqExpression()).FirstOrDefault()
+
+            'if this was already a new record (tempFd2Record Is Nothing AndAlso Not bUpdating) 
+            'then just do validation of values based on the new key controls values and exit the sub
+            If tempRecord Is Nothing AndAlso Not bUpdating Then
                 ValidateDataEntryPermission()
+                SetTmaxRequired(IsTmaxRequired())
+                SetTminAndRelatedElementsRequired(IsTminRequired())
+                SetGminRequired(IsGminRequired())
+                ValidateValue()
+                Exit Sub
             End If
+
+            fs2ra1Record = tempRecord
+            If fs2ra1Record Is Nothing Then
+                fs2ra1Record = New form_synoptic_2_ra1
+                bUpdating = False
+            Else
+                clsDataConnection.db.Entry(fs2ra1Record).State = Entity.EntityState.Detached
+                bUpdating = True
+            End If
+
+            'enable or disable textboxes based on year month day
+            ValidateDataEntryPermission()
+
             'set the values for all the value flag period controls
             For Each ctr In Me.Controls
                 If TypeOf ctr Is ucrValueFlagPeriod Then
@@ -88,38 +119,42 @@ Public Class ucrSynopticRA1
             'Check if Gmin is required and change properties accordingly
             SetGminRequired(IsGminRequired())
 
-            If Not bUpdating Then
+            If Not bUpdating AndAlso bAutoFillValues Then
                 SetDefaultStandardPressureLevel()
             End If
+
+            OnevtValueChanged(Me, Nothing)
+
+        End If
+
+        ' Set conditions for double key entry
+        If frmNewSynopticRA1.chkRepeatEntry.Checked Then
+            Me.Clear()
+            ucrVFPStationLevelPressure.ucrValue.GetFocus()
+            With frmNewSynopticRA1
+                .btnAddNew.Enabled = False
+                .btnSave.Enabled = False
+                .btnUpdate.Enabled = True
+            End With
         End If
 
     End Sub
 
     Private Sub InnerControlValueChanged(sender As Object, e As EventArgs)
-        Dim ucrTextbox As ucrTextBox
-        If TypeOf sender Is ucrTextBox Then
-            ucrTextbox = DirectCast(sender, ucrTextBox)
-            CallByName(fs2ra1Record, ucrTextbox.GetField, CallType.Set, ucrTextbox.GetValue)
-        End If
+        Try
+            Dim ucrTextbox As ucrTextBox
+            If TypeOf sender Is ucrTextBox Then
+                ucrTextbox = DirectCast(sender, ucrTextBox)
+                CallByName(fs2ra1Record, ucrTextbox.GetField, CallType.Set, ucrTextbox.GetValue)
+            End If
+        Catch ex As Exception
+            MessageBox.Show("Error: " & ex.Message, "Fields Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
-    'TODO
-    'THE NEXT FOCUS NEEDS TO BE REDONE DIFFERENTLY
+    'TODO?
     Private Sub GoToNextVFPControl(sender As Object, e As EventArgs)
-        'Dim ctrVFP As ucrValueFlagPeriod
 
-        'If TypeOf sender Is ucrValueFlagPeriod Then
-        '    ctrVFP = DirectCast(sender, ucrValueFlagPeriod)
-        '    For Each ctr As Control In Me.Controls
-        '        If TypeOf ctr Is ucrValueFlagPeriod Then
-        '            If ctr.Tag = ctrVFP.Tag + 1 Then
-        '                If ctr.Enabled Then
-        '                    ctr.Focus()
-        '                End If
-        '            End If
-        '        End If
-        '    Next
-        'End If
     End Sub
 
     Public Overrides Sub AddLinkedControlFilters(ucrLinkedDataControl As ucrBaseDataLink, tblFilter As TableFilter, Optional strFieldName As String = "")
@@ -131,30 +166,44 @@ Public Class ucrSynopticRA1
     End Sub
 
     Protected Overrides Sub LinkedControls_evtValueChanged()
-        fs2ra1Record = Nothing
-        MyBase.LinkedControls_evtValueChanged()
-
-        For Each kvpTemp As KeyValuePair(Of ucrBaseDataLink, KeyValuePair(Of String, TableFilter)) In dctLinkedControlsFilters
-            CallByName(fs2ra1Record, kvpTemp.Value.Value.GetField(), CallType.Set, kvpTemp.Key.GetValue)
+        Dim bValidValues As Boolean = True
+        For Each key As ucrBaseDataLink In dctLinkedControlsFilters.Keys
+            If Not key.ValidateValue Then
+                bValidValues = False
+                Exit For
+            End If
         Next
-        ucrLinkedNavigation.UpdateNavigationByKeyControls()
+
+        If bValidValues Then
+            'fs2ra1Record = Nothing
+            MyBase.LinkedControls_evtValueChanged()
+            For Each kvpTemp As KeyValuePair(Of ucrBaseDataLink, KeyValuePair(Of String, TableFilter)) In dctLinkedControlsFilters
+                CallByName(fs2ra1Record, kvpTemp.Value.Value.GetField(), CallType.Set, kvpTemp.Key.GetValue)
+            Next
+            ucrLinkedNavigation.UpdateNavigationByKeyControls()
+        Else
+            'TODO. DISABLE??
+            'Me.Enabled = False
+        End If
+
     End Sub
 
     Public Sub SaveRecord()
         If bUpdating Then
-            'clsDataConnection.db.fs2ra1Record.Add(fs2ra1Record)
             clsDataConnection.db.Entry(fs2ra1Record).State = Entity.EntityState.Modified
         Else
-            'clsDataConnection.db.fs2ra1Record.Add(fs2ra1Record)
+            'This is determined by the current user not set from the form
+            fs2ra1Record.signature = frmLogin.txtUsername.Text
+            fs2ra1Record.entryDatetime = Date.Now()
             clsDataConnection.db.Entry(fs2ra1Record).State = Entity.EntityState.Added
         End If
 
         clsDataConnection.db.SaveChanges()
-
+        'detach the record to prevent caching of records on the EF
+        clsDataConnection.db.Entry(fs2ra1Record).State = Entity.EntityState.Detached
     End Sub
 
     Public Sub DeleteRecord()
-        'clsDataConnection.db.Entry(fs2ra1Record)
         clsDataConnection.db.form_synoptic_2_ra1.Attach(fs2ra1Record)
         clsDataConnection.db.form_synoptic_2_ra1.Remove(fs2ra1Record)
         clsDataConnection.db.SaveChanges()
@@ -185,13 +234,19 @@ Public Class ucrSynopticRA1
                     ucrVFP = DirectCast(ctr, ucrValueFlagPeriod)
                     row = dtbl.Select("elementId = '" & ucrVFP.Tag & "'").FirstOrDefault()
                     If row IsNot Nothing Then
-                        If Val(row.Item("lowerLimit")) <> 0 Then
-                            ucrVFP.SetElementValueValidation(iLowerLimit:=Val(row.Item("lowerLimit")))
+
+                        If IsDBNull(row.Item("lowerLimit")) OrElse String.IsNullOrEmpty(row.Item("lowerLimit")) Then
+                            ucrVFP.SetElementValueLowerLimit(Decimal.MinValue)
+                        Else
+                            ucrVFP.SetElementValueLowerLimit(Val(row.Item("lowerLimit")))
                         End If
 
-                        If Val(row.Item("upperLimit")) <> 0 Then
-                            ucrVFP.SetElementValueValidation(iUpperLimit:=Val(row.Item("upperLimit")))
+                        If IsDBNull(row.Item("upperLimit")) OrElse String.IsNullOrEmpty(row.Item("upperLimit")) Then
+                            ucrVFP.SetElementValueHigherLimit(Decimal.MaxValue)
+                        Else
+                            ucrVFP.SetElementValueHigherLimit(Val(row.Item("upperLimit")))
                         End If
+
                     End If
                 End If
             Next
@@ -219,10 +274,10 @@ Public Class ucrSynopticRA1
     ''' Returns true if they are all valid and false if any one of them has invalid value
     ''' </summary>
     ''' <returns></returns>
-    Public Function IsValuesValid() As Boolean
+    Public Overrides Function ValidateValue() As Boolean
         For Each ctr As Control In Me.Controls
             If TypeOf ctr Is ucrValueFlagPeriod Then
-                If Not DirectCast(ctr, ucrValueFlagPeriod).IsValuesValid() Then
+                If Not DirectCast(ctr, ucrValueFlagPeriod).ValidateValue() Then
                     ctr.Focus()
                     Return False
                 End If
@@ -373,6 +428,10 @@ Public Class ucrSynopticRA1
 
     Private Sub ucrVFPWetBulbTemp_Leave(sender As Object, e As EventArgs) Handles ucrVFPWetBulbTemp.Leave
         Try
+            If Not bAutoFillValues Then
+                Exit Sub
+            End If
+
             If Val(ucrVFPDryBulbTemp.GetElementValue) < Val(ucrVFPWetBulbTemp.GetElementValue) Then
                 ucrVFPWetBulbTemp.ucrValue.SetBackColor(Color.Cyan)
                 ucrVFPDryBulbTemp.ucrValue.SetBackColor(Color.Cyan)
@@ -411,6 +470,10 @@ Public Class ucrSynopticRA1
     End Sub
 
     Private Sub UcrVFPDewPointTemp_Leave(sender As Object, e As EventArgs) Handles ucrVFPDewPointTemp.Leave
+        If Not bAutoFillValues Then
+            Exit Sub
+        End If
+
         Dim dryBulb, dewPoint As Decimal
         'Apply element scale factor to drybulb and wetbulb before calling the function to calculate relative humidty
         dryBulb = Val(ucrVFPDryBulbTemp.GetElementValue) / 10
@@ -504,6 +567,8 @@ Public Class ucrSynopticRA1
         ucrLinkedHour = ucrHourControl
         ucrLinkedNavigation = ucrNavigationControl
 
+        ucrLinkedHour.setDefaultValue(6)
+
         AddLinkedControlFilters(ucrLinkedStation, "stationId", "==", strLinkedFieldName:="stationId", bForceValuesAsString:=True)
         AddLinkedControlFilters(ucrLinkedYear, "yyyy", "==", strLinkedFieldName:="Year", bForceValuesAsString:=False)
         AddLinkedControlFilters(ucrLinkedMonth, "mm", "==", strLinkedFieldName:="MonthId", bForceValuesAsString:=False)
@@ -523,24 +588,278 @@ Public Class ucrSynopticRA1
     ''' this prevents data entry of current and future dates
     ''' </summary>
     Private Sub ValidateDataEntryPermission()
-        'if its an update or any of the linked year,month and day selector is nothing then just exit the sub
-        If bUpdating OrElse ucrLinkedYear Is Nothing OrElse ucrLinkedMonth Is Nothing OrElse ucrLinkedDay Is Nothing Then
-            Exit Sub
-        End If
+        'if its an update or any of the linked year,month and day selector is nothing then just enable the control
+        If ucrLinkedYear Is Nothing OrElse ucrLinkedMonth Is Nothing OrElse ucrLinkedDay Is Nothing Then
+            Me.Enabled = False
+        ElseIf ucrLinkedYear.ValidateValue AndAlso ucrLinkedMonth.ValidateValue AndAlso ucrLinkedDay.ValidateValue Then
+            Dim todayDate As Date = Date.Now
+            Dim selectedDate As Date
+            'initialise the dates with ONLY year month and day values. Neglect the time factor
+            todayDate = New Date(todayDate.Year, todayDate.Month, todayDate.Day)
+            selectedDate = New Date(ucrLinkedYear.GetValue, ucrLinkedMonth.GetValue, ucrLinkedDay.GetValue)
 
-        Dim todayDate As Date
-        Dim selectedDate As Date
-        'initialise the dates with ONLY year month and day values. Neglect the time factor
-        todayDate = New Date(Date.Now.Year, Date.Now.Month, Date.Now.Day)
-        selectedDate = New Date(ucrLinkedYear.GetValue, ucrLinkedMonth.GetValue, ucrLinkedDay.GetValue)
-
-        'if selectedDate is earlier than todayDate enable control
-        If DateTime.Compare(selectedDate, todayDate) < 0 Then
-            Me.Enabled = True
-        Else
+            'if selectedDate is earlier than todayDate (<0) enable control
             'if it is same time (0) or later than (>0) disable control
+            Me.Enabled = If(Date.Compare(selectedDate, todayDate) < 0, True, False)
+        Else
             Me.Enabled = False
         End If
     End Sub
+
+    'upload code in the background thread
+    Public Sub UploadAllRecords()
+        Dim frm As New frmNewComputationProgress
+        frm.SetHeader("Uploading " & ucrLinkedNavigation.iMaxRows & " records")
+        frm.SetProgressMaximum(ucrLinkedNavigation.iMaxRows)
+        frm.ShowResultMessage(True)
+        AddHandler frm.backgroundWorker.DoWork, AddressOf DoUpload
+
+        'TODO. temporary. Pass the connection string . The current connection properties are being stored in control
+        'Once this is fixed, the argument can be removed
+        frm.backgroundWorker.RunWorkerAsync(frmLogin.txtusrpwd.Text)
+
+        frm.Show()
+    End Sub
+
+    Private Sub DoUpload(sender As Object, e As System.ComponentModel.DoWorkEventArgs)
+        Dim backgroundWorker As System.ComponentModel.BackgroundWorker = DirectCast(sender, System.ComponentModel.BackgroundWorker)
+
+        ' Dim clsAllRecordsCall As New DataCall
+        Dim dtbAllRecords As New DataTable
+        Dim strValueColumn As String
+        Dim strFlagColumn As String
+        Dim strElementCode As String
+        Dim strStationId As String
+        Dim lElementId As Long
+        Dim dtObsDateTime As Date
+        Dim lstAllFields As New List(Of String)
+        Dim bUpdateRecord As Boolean
+        Dim strSql As String
+        Dim strSignature As String
+        Dim conn As New MySql.Data.MySqlClient.MySqlConnection
+        Dim pos As Integer = 0
+        Dim invalidRecord As Boolean = False
+        Dim strResult As String = ""
+
+        'get the observation values fields
+        lstAllFields.AddRange(lstFields)
+        'TODO "entryDatetime" should be here as well once entity model has been updated.
+        lstAllFields.AddRange({"signature"})
+
+        'clsAllRecordsCall.SetTableNameAndFields(strTableName, lstAllFields)
+        'dtbAllRecords = clsAllRecordsCall.GetDataTable()
+
+        Try
+            'Temporary.The current connection properties are being stored in control, this line can be removed in future
+            conn.ConnectionString = e.Argument
+            conn.Open()
+            'Get all the records from the table
+            Using cmdSelect As New MySql.Data.MySqlClient.MySqlCommand("Select * FROM " & strTableName & " ORDER BY entryDatetime", conn)
+                Using da As New MySql.Data.MySqlClient.MySqlDataAdapter(cmdSelect)
+                    da.Fill(dtbAllRecords)
+                End Using
+            End Using
+
+            'Save the records to observable initial table
+            For Each row As DataRow In dtbAllRecords.Rows
+                If backgroundWorker.CancellationPending Then
+                    e.Result = strResult & "Cancelling upload"
+                    e.Cancel = True
+                    Exit For
+                End If
+
+
+                For Each strFieldName As String In lstFields
+                    'if its not an observation value field then skip the loop
+                    If Not strFieldName.StartsWith(Me.strValueFieldName) Then
+                        Continue For
+                    End If
+
+                    strElementCode = strFieldName.Substring(Me.strValueFieldName.Length)
+                    strValueColumn = strFieldName
+                    strFlagColumn = lstFields.Find(Function(x As String)
+                                                       Return x.Equals(Me.strFlagFieldName & strElementCode)
+                                                   End Function)
+
+                    'set the record
+                    If Not IsDBNull(row.Item(strValueColumn)) AndAlso Not String.IsNullOrEmpty(row.Item(strValueColumn)) AndAlso Long.TryParse(strElementCode, lElementId) Then
+
+                        strStationId = row.Item("stationId")
+
+                        Try
+                            dtObsDateTime = New Date(row.Item("yyyy"), row.Item("mm"), row.Item("dd"), row.Item("hh"), 0, 0)
+                        Catch ex As Exception
+                            'MsgBox("Invalid date detected. Record number " & pos & " has invalid record. This row will be skipped")
+                            invalidRecord = True
+                            strResult = strResult & "Invalid date detected. Record number " & pos & " has invalid record" &
+                                " Station: " & strStationId & ", Element: " & lElementId &
+                                ", Year: " & row.Item("yyyy") & ", Month: " & row.Item("mm") & ", Day: " & row.Item("dd") & ", Hour: " & row.Item("hh") &
+                                ". This row will be skipped" & Environment.NewLine
+                            Exit For
+                        End Try
+
+                        bUpdateRecord = False
+                        'check if record exists
+                        strSql = "SELECT * FROM observationInitial WHERE recordedFrom=@stationId AND describedBy=@elemCode AND obsDatetime=@obsDatetime AND qcStatus=@qcStatus AND acquisitionType=@acquisitiontype AND dataForm=@dataForm"
+                        Using cmd As New MySql.Data.MySqlClient.MySqlCommand(strSql, conn)
+                            cmd.Parameters.AddWithValue("@stationId", strStationId)
+                            cmd.Parameters.AddWithValue("@elemCode", lElementId)
+                            cmd.Parameters.AddWithValue("@obsDatetime", dtObsDateTime)
+                            cmd.Parameters.AddWithValue("@qcStatus", 0)
+                            cmd.Parameters.AddWithValue("@acquisitiontype", 1)
+                            cmd.Parameters.AddWithValue("@dataForm", strTableName)
+                            Using reader As MySql.Data.MySqlClient.MySqlDataReader = cmd.ExecuteReader()
+                                bUpdateRecord = reader.HasRows
+                            End Using
+                        End Using
+
+                        strSignature = ""
+
+                        If Not IsDBNull(row.Item("signature")) Then
+                            strSignature = row.Item("signature")
+                        End If
+
+                        If bUpdateRecord Then
+                            strSql = "UPDATE observationInitial SET recordedFrom=@stationId,describedBy=@elemCode,obsDatetime=@obsDatetime,obsLevel=@obsLevel,obsValue=@obsVal,flag=@obsFlag,qcStatus=@qcStatus,acquisitionType=@acquisitiontype,capturedBy=@capturedBy,dataForm=@dataForm " &
+                                " WHERE recordedFrom=@stationId And describedBy=@elemCode AND obsDatetime=@obsDatetime AND qcStatus=@qcStatus AND acquisitionType=@acquisitiontype AND dataForm=@dataForm"
+                        Else
+                            strSql = "INSERT INTO observationInitial(recordedFrom,describedBy,obsDatetime,obsLevel,obsValue,flag,qcStatus,acquisitionType,capturedBy,dataForm) " &
+                            "VALUES (@stationId,@elemCode,@obsDatetime,@obsLevel,@obsVal,@obsFlag,@qcStatus,@acquisitiontype,@capturedBy,@dataForm)"
+                        End If
+
+                        Try
+                            Using cmd As New MySql.Data.MySqlClient.MySqlCommand(strSql, conn)
+                                cmd.Parameters.AddWithValue("@stationId", strStationId)
+                                cmd.Parameters.AddWithValue("@elemCode", lElementId)
+                                cmd.Parameters.AddWithValue("@obsDatetime", dtObsDateTime)
+                                cmd.Parameters.AddWithValue("@obsLevel", "surface")
+                                cmd.Parameters.AddWithValue("@obsVal", row.Item(strValueColumn))
+                                cmd.Parameters.AddWithValue("@obsFlag", row.Item(strFlagColumn))
+                                cmd.Parameters.AddWithValue("@qcStatus", 0)
+                                cmd.Parameters.AddWithValue("@acquisitiontype", 1)
+                                cmd.Parameters.AddWithValue("@capturedBy", strSignature)
+                                cmd.Parameters.AddWithValue("@dataForm", strTableName)
+                                cmd.ExecuteNonQuery()
+                            End Using
+                        Catch ex As Exception
+                            'MsgBox("Invalid record detected. Record number " & pos & " could not be uploaded. This record will be skipped")
+                            invalidRecord = True
+                            strResult = strResult & "Invalid record detected. Record number " & pos & " could not be uploaded" &
+                                " Station: " & strStationId & ", Element: " & lElementId &
+                                ", Year: " & row.Item("yyyy") & ", Month: " & row.Item("mm") & ", Day: " & row.Item("dd") & ", Hour: " & row.Item("hh") & ", Date: " & dtObsDateTime &
+                                ". This record was skipped" & Environment.NewLine
+                            Exit For
+                        End Try
+
+                    End If
+                Next
+
+                'Display progress of data transfer
+                pos = pos + 1
+                backgroundWorker.ReportProgress(pos)
+            Next
+
+            If Not invalidRecord Then
+                e.Result = "Records have been uploaded sucessfully"
+            Else
+                e.Result = strResult
+            End If
+        Catch ex As Exception
+            e.Result = "Error " & ex.Message
+        Finally
+            conn.Close()
+        End Try
+
+
+        'TODO? because of the detachment
+        'PopulateControl()
+
+    End Sub
+
+    'TODO. Can be used once the issue of ObservationInitial primary keys is fixed
+    Public Sub UploadAllRecordsEF()
+        Dim clsAllRecordsCall As New DataCall
+        Dim dtbAllRecords As DataTable
+        Dim rcdObservationInitial As observationinitial
+        Dim strValueColumn As String
+        Dim strFlagColumn As String
+        Dim strElementCode As String
+        Dim strStationId As String
+        Dim lElementId As Long
+        Dim dtObsDateTime As Date
+        Dim lstAllFields As New List(Of String)
+        Dim bNewRecord As Boolean
+
+        'get the observation values fields
+        lstAllFields.AddRange(lstFields)
+        'TODO "entryDatetime" should be here as well once entity model has been updated.
+        lstAllFields.AddRange({"signature"})
+
+        clsAllRecordsCall.SetTableNameAndFields(strTableName, lstAllFields)
+        dtbAllRecords = clsAllRecordsCall.GetDataTable()
+
+        For Each row As DataRow In dtbAllRecords.Rows
+            For Each strFieldName As String In lstFields
+                'if its not an observation value field then skip the loop
+                If Not strFieldName.StartsWith(Me.strValueFieldName) Then
+                    Continue For
+                End If
+
+                strElementCode = strFieldName.Substring(Me.strValueFieldName.Length)
+                strValueColumn = strFieldName
+                strFlagColumn = lstFields.Find(Function(x As String)
+                                                   Return x.Equals(Me.strFlagFieldName & strElementCode)
+                                               End Function)
+
+                'set the record
+                If Not IsDBNull(row.Item(strValueColumn)) AndAlso Not String.IsNullOrEmpty(row.Item(strValueColumn)) AndAlso Long.TryParse(strElementCode, lElementId) Then
+
+                    strStationId = row.Item("stationId")
+                    dtObsDateTime = New Date(row.Item("yyyy"), row.Item("mm"), row.Item("dd"), row.Item("hh"), 0, 0)
+
+                    rcdObservationInitial = clsDataConnection.db.observationinitials.Where("recordedFrom  == @0  And describedBy == @1 AND obsDatetime  == @2  AND qcStatus  == @3 AND acquisitionType  == @4",
+                                                                         {strStationId, lElementId, dtObsDateTime, 0, 1}).FirstOrDefault()
+
+                    If rcdObservationInitial Is Nothing Then
+                        bNewRecord = True
+                        rcdObservationInitial = New observationinitial
+                    Else
+                        bNewRecord = False
+                    End If
+
+                    rcdObservationInitial.recordedFrom = strStationId
+                    rcdObservationInitial.describedBy = lElementId
+                    rcdObservationInitial.obsDatetime = dtObsDateTime
+                    rcdObservationInitial.obsLevel = "surface"
+                    rcdObservationInitial.obsValue = row.Item(strValueColumn)
+                    rcdObservationInitial.flag = row.Item(strFlagColumn)
+                    rcdObservationInitial.qcStatus = 0
+                    rcdObservationInitial.acquisitionType = 1
+                    rcdObservationInitial.dataForm = strTableName
+
+                    If Not IsDBNull(row.Item("signature")) Then
+                        rcdObservationInitial.capturedBy = row.Item("signature")
+                    End If
+
+                    If bNewRecord Then
+                        clsDataConnection.db.observationinitials.Add(rcdObservationInitial)
+                    End If
+                    'save the Observation record
+                    clsDataConnection.db.SaveChanges()
+
+                End If
+            Next
+        Next
+
+        'TODO? because of the detachment
+        PopulateControl()
+
+    End Sub
+
+    Private Function SetUpContextMenuStrip() As ContextMenuStrip
+        'the alternative of this would be to select the first control (in the designer), click Send to Back, and repeat.
+        Dim allVFP = From vfp In Me.Controls.OfType(Of ucrValueFlagPeriod)() Order By vfp.TabIndex
+        Return New ClsShiftCells(allVFP).GetVFPContextMenu()
+    End Function
 
 End Class

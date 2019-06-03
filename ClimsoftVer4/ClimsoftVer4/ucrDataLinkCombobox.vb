@@ -4,6 +4,7 @@
     Public bValidate As Boolean = True
     Public bValidateSilently As Boolean = True
     Public bValidateEmpty As Boolean = False
+    Private objDefaultValue As Object = Nothing
 
     Public Overrides Sub PopulateControl()
         If bFillFromDataBase Then
@@ -25,45 +26,42 @@
         Next
         PopulateControl()
     End Sub
-    'NOT SURE ABOUT THIS BUT I SUSPECT IT NEEDS TO BE OVERRIDEN 
-    'ALTERNATIVELY WE COULD OVERRIDE THE sub UpdateDataTable() 
+
     Protected Overrides Sub LinkedControls_evtValueChanged()
-        'If Not IsNothing(clsDataDefinition) Then
-        '    Dim objData As List(Of String)
-        '    Dim strDbValue As String
-        '    objData = clsDataDefinition.GetValues(GetLinkedControlsFilter())
-        '    If objData.Count > 0 Then
-        '        strDbValue = objData(0)
-        '        For index As Integer = 0 To dtbRecords.Rows.Count - 1
-        '            If dtbRecords.Rows(index).Field(Of String)(0) = strDbValue Then
-        '                cboValues.SelectedIndex = index
-        '            End If
-        '        Next
-        '    End If
-        'End If
+        'TODO
     End Sub
 
     Public Overrides Sub SetValue(objNewValue As Object)
         Dim strCol As String
+        Dim bValueFound As Boolean = False
         'MyBase.SetValue(objNewValue)
         strCol = cboValues.ValueMember
-        For Each rTemp As DataRow In dtbRecords.Rows
-            'Calling ToString to prevent invalid casting
-            If rTemp.Item(strCol).ToString = objNewValue.ToString Then
-                cboValues.SelectedValue = objNewValue
-                Exit Sub
+        If String.IsNullOrEmpty(objNewValue) Then
+            cboValues.Text = ""
+        Else
+            For Each rTemp As DataRow In dtbRecords.Rows
+                'Calling ToString to prevent invalid casting
+                If rTemp.Item(strCol).ToString = objNewValue.ToString Then
+                    'set the text using the display column
+                    cboValues.Text = rTemp.Item(cboValues.DisplayMember)
+                    'cboValues.SelectedValue = objNewValue
+                    bValueFound = True
+                    Exit For
+                End If
+            Next
+
+            If Not bValueFound Then
+                cboValues.Text = objNewValue
             End If
-        Next
-        cboValues.Text = objNewValue
-        'TODO possibly want this as well?
-        'cboValues.SelectedIndex = -1
+
+        End If
+
+
+        OnevtValueChanged(Me, Nothing)
     End Sub
 
     ''' <summary>
-    ''' If the text in the textbox portion does not match any of the items in the dropdown then GetValue will always return cboValue.Text
-    ''' regardless of strFieldName
-    ''' If the text matches an item then the value from strFieldName for the selected item will be returned.
-    ''' When strFieldName is not specified cboValue.SelectedValue will be returned.
+    ''' Gets the set or selected value of the combobox. if strFieldName is not empty the value of the passed field will be returned
     ''' </summary>
     ''' <param name="strFieldName"></param>
     ''' <returns></returns>
@@ -71,28 +69,52 @@
         Dim strCol As String
         strCol = cboValues.DisplayMember
         For Each rTemp As DataRow In dtbRecords.Rows
-            If rTemp(strCol).ToString = cboValues.Text Then
+            If rTemp.Item(strCol).ToString = cboValues.Text Then
                 If strFieldName = "" Then
-                    Return cboValues.SelectedValue
+                    'Return cboValues.SelectedValue
+                    'get the value from the value column
+                    Return rTemp.Item(cboValues.ValueMember)
                 Else
-                    Return rTemp(strFieldName)
+                    Return rTemp.Item(strFieldName)
                 End If
             End If
         Next
         Return cboValues.Text
     End Function
 
+    Public Sub setDefaultValue(objNewValue As Object)
+        objDefaultValue = objNewValue
+    End Sub
+
+    Public Sub SelectDefault()
+        If objDefaultValue IsNot Nothing AndAlso dtbRecords IsNot Nothing AndAlso dtbRecords.Rows.Count > 0 Then
+            SetValue(objDefaultValue)
+        Else
+            SelectFirst()
+        End If
+    End Sub
+
+    Public Sub SelectFirst()
+        If dtbRecords IsNot Nothing AndAlso dtbRecords.Rows.Count > 0 Then
+            SetValue(dtbRecords.Rows.Item(0).Item(cboValues.ValueMember))
+        End If
+    End Sub
+
+    Public Sub SelectLast()
+        If dtbRecords IsNot Nothing AndAlso dtbRecords.Rows.Count > 0 Then
+            SetValue(dtbRecords.Rows.Item(dtbRecords.Rows.Count - 1).Item(cboValues.ValueMember))
+        End If
+    End Sub
+
     Public Overrides Function ValidateValue() As Boolean
         Dim bValid As Boolean = False
-        Dim strCol As String
-        strCol = cboValues.DisplayMember
+        Dim strCol As String = cboValues.DisplayMember
         For Each rTemp As DataRow In dtbRecords.Rows
-            If rTemp(strCol).ToString = cboValues.Text Then
+            If rTemp.Item(strCol).ToString = cboValues.Text Then
                 bValid = True
                 Exit For
             End If
         Next
-
         SetBackColor(If(bValid, Color.White, Color.Red))
         Return bValid
     End Function
@@ -158,23 +180,23 @@
     End Sub
 
     Private Sub cboValues_KeyDown(sender As Object, e As KeyEventArgs) Handles cboValues.KeyDown
-        OnevtKeyDown(sender, e)
+        OnevtKeyDown(Me, e)
     End Sub
 
     Private Sub cboValues_SelectedValueChanged(sender As Object, e As EventArgs) Handles cboValues.SelectedValueChanged
-        OnevtValueChanged(sender, e)
+        OnevtValueChanged(Me, e)
     End Sub
 
     Private Sub cboValues_TextChanged(sender As Object, e As EventArgs) Handles cboValues.TextChanged
-        OnevtTextChanged(sender, e)
+        OnevtTextChanged(Me, e)
     End Sub
 
     Private Sub cboValues_Leave(sender As Object, e As EventArgs) Handles cboValues.Leave
-        SetValue(cboValues.Text)
         'check if value is valid
         If bValidate Then
             ValidateValue()
         End If
+        OnevtValueChanged(Me, e)
     End Sub
 
 End Class

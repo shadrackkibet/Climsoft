@@ -19,6 +19,7 @@ Public Class ucrDirectionSpeedFlag
     Private iDirectionDigits As Integer
     Private iSpeedDigits As Integer
     Public Event evtGoToNextDSFControl(sender As Object, e As KeyEventArgs)
+    Public objKeyPress As New dataEntryGlobalRoutines
 
     Public Overrides Sub SetTableName(strNewTable As String)
         MyBase.SetTableName(strNewTable)
@@ -93,13 +94,26 @@ Public Class ucrDirectionSpeedFlag
         MyBase.SetValue(objNewValue)
         lstValues = TryCast(objNewValue, List(Of Object))
         If lstValues.Count = 3 Then
-            'ucrDDFF.SetValue(lstValues(0) + lstValues(1))
-            ucrDDFF.SetValue("")
+            ucrDDFF.SetValue(lstValues(0) + "" + lstValues(1) + "" + lstValues(2))
+            'ucrDDFF.SetValue("")
             SetElementDirectionValue(lstValues(0))
             SetElementSpeedValue(lstValues(1))
             SetElementFlagValue(lstValues(2))
+        ElseIf lstValues.Count = 2 Then
+            ucrDDFF.SetValue(lstValues(0) + "" + lstValues(1))
+            'ucrDDFF.SetValue("")
+            SetElementDirectionValue(lstValues(0))
+            SetElementSpeedValue(lstValues(1))
         End If
     End Sub
+
+    Public Overrides Function GetValue(Optional strFieldName As String = "") As Object
+        Dim lstValueDDFFFlag As New List(Of Object)
+        lstValueDDFFFlag.Add(GetElementDirectionValue())
+        lstValueDDFFFlag.Add(GetElementSpeedValue())
+        lstValueDDFFFlag.Add(GetElementFlagValue())
+        Return lstValueDDFFFlag
+    End Function
 
     Public Sub SetElementDirectionValue(strValue As String)
         ucrDirection.SetValue(strValue)
@@ -137,12 +151,30 @@ Public Class ucrDirectionSpeedFlag
         Return ucrFlag.IsEmpty()
     End Function
 
-    Public Sub SetElementDirectionValidation(Optional iLowerLimit As Decimal = Decimal.MinValue, Optional iUpperLimit As Decimal = Decimal.MaxValue)
-        ucrDirection.SetValidationTypeAsNumeric(dcmMin:=iLowerLimit, dcmMax:=iUpperLimit)
+    Public Sub SetElementDirectionLimit(iLowerLimit As Decimal, iUpperLimit As Decimal)
+        SetElementDirectionLowerLimit(iLowerLimit)
+        SetElementDirectionHigherLimit(iUpperLimit)
     End Sub
 
-    Public Sub SetElementSpeedValidation(Optional iLowerLimit As Decimal = Decimal.MinValue, Optional iUpperLimit As Decimal = Decimal.MaxValue)
-        ucrSpeed.SetValidationTypeAsNumeric(dcmMin:=iLowerLimit, dcmMax:=iUpperLimit)
+    Public Sub SetElementDirectionLowerLimit(iLowerLimit As Decimal)
+        ucrDirection.SetMinimumValue(iLowerLimit)
+    End Sub
+
+    Public Sub SetElementDirectionHigherLimit(iUpperLimit As Decimal)
+        ucrDirection.SetMaximumValue(iUpperLimit)
+    End Sub
+
+    Public Sub SetElementSpeedLimit(iLowerLimit As Decimal, iUpperLimit As Decimal)
+        SetElementSpeedLowerLimit(iLowerLimit)
+        SetElementSpeedHigherLimit(iUpperLimit)
+    End Sub
+
+    Public Sub SetElementSpeedLowerLimit(iLowerLimit As Decimal)
+        ucrSpeed.SetMinimumValue(iLowerLimit)
+    End Sub
+
+    Public Sub SetElementSpeedHigherLimit(iUpperLimit As Decimal)
+        ucrSpeed.SetMaximumValue(iUpperLimit)
     End Sub
 
     Public Sub SetElementDirectionDigits(iNewDirectionDigits As Integer)
@@ -153,182 +185,26 @@ Public Class ucrDirectionSpeedFlag
         iSpeedDigits = iNewSpeedDigits
     End Sub
 
-    Public Function IsValuesValid() As Boolean
+    ''' <summary>
+    ''' checks if the already Quality Control processed values are valid or not for all the controls
+    ''' </summary>
+    ''' <returns></returns>
+    Public Overrides Function ValidateValue() As Boolean
         Return IsElementDirectionValueValid() AndAlso IsElementSpeedValueValid() AndAlso IsElementFlagValueValid()
     End Function
 
     Public Function IsElementDirectionValueValid() As Boolean
-        Return DoQcForDirection()
-    End Function
-
-    Public Function IsElementSpeedValueValid() As Boolean
-        Return DoQcForSpeed()
-    End Function
-
-    Public Function IsElementFlagValueValid() As Boolean
-        Return DoQcForFlag()
-    End Function
-
-    Public Overrides Sub Clear()
-        ucrDDFF.Clear()
-        ucrDirection.Clear()
-        ucrSpeed.Clear()
-        ucrFlag.Clear()
-    End Sub
-
-    Public Sub SetBackColor(backColor As Color)
-        ucrDDFF.SetBackColor(backColor)
-        ucrDirection.SetBackColor(backColor)
-        ucrSpeed.SetBackColor(backColor)
-        ucrFlag.SetBackColor(backColor)
-    End Sub
-
-    Private Sub ucrDirectionSpeedFlag_Load(sender As Object, e As EventArgs) Handles Me.Load
-        If bFirstLoad Then
-            ucrDDFF.SetValidationTypeAsNone()
-            ucrDirection.bValidateSilently = False
-            ucrSpeed.bValidateSilently = False
-            ucrDirection.SetValidationTypeAsNumeric()
-            ucrSpeed.SetValidationTypeAsNumeric()
-            ucrFlag.SetTextToUpper()
-            ucrFlag.SetAsReadOnly()
-            bFirstLoad = False
-        End If
-    End Sub
-
-    'Todo remove flag event
-    Private Sub ucrDirectionSpeedFlag_KeyDown(sender As Object, e As KeyEventArgs) Handles ucrDDFF.evtKeyDown, ucrDirection.evtKeyDown, ucrSpeed.evtKeyDown
-        'TODO
-        'FIND AWAY OF PASSING ME AND THE SENDER TO THE evtGoToNextVFPControl
-        'If {ENTER} key is pressed
-        If e.KeyCode = Keys.Enter Then
-            If DoInputQCCheck(sender) Then
-                RaiseEvent evtGoToNextDSFControl(Me, e)
-            End If
-        End If
-    End Sub
-
-    'TODO. Do this in the event value changed?
-    Private Sub ucrDDFF_Leave(sender As Object, e As EventArgs) Handles ucrDDFF.Leave, ucrDirection.Leave, ucrSpeed.Leave
-        DoInputQCCheck(sender)
-    End Sub
-    ''' <summary>
-    ''' this function checks does quality control based on the user input. 
-    ''' It gets the user input from the passed sender object.
-    ''' Returns true if the input is valid and false otherwise
-    ''' </summary>
-    ''' <param name="sender"></param>
-    ''' <returns></returns>
-    Private Function DoInputQCCheck(sender As Object) As Boolean
-        Dim bValuesCorrect As Boolean = False
-
-        If sender Is ucrDDFF.txtBox Then
-            If DoQCForUcrDDFFUserInput() Then
-                bValuesCorrect = True
-            End If
-        ElseIf sender Is ucrDirection.txtBox Then
-            If DoQcForDirection() Then
-                If Not ucrDirection.IsEmpty AndAlso ucrFlag.GetValue = "M" Then
-                    ucrFlag.SetValue("")
-                End If
-                bValuesCorrect = DoQcForFlag()
-            End If
-        ElseIf sender Is ucrSpeed.txtBox Then
-            If DoQcForSpeed() Then
-                If Not ucrSpeed.IsEmpty AndAlso ucrFlag.GetValue = "M" Then
-                    ucrFlag.SetValue("")
-                End If
-                bValuesCorrect = DoQcForFlag()
-            End If
-        End If
-        Return bValuesCorrect
-    End Function
-
-    Private Function DoQCForUcrDDFFUserInput() As Boolean
-        Dim bValuesCorrect As Boolean = False
-        Dim bValidateSilently As Boolean
-
-        If ucrDDFF.IsEmpty() Then
-            'empty ucrDDFF is a valid value
-            bValuesCorrect = True
-        Else
-            'check for an observation flag. Must be the last character if it's included
-            If Not IsNumeric(Strings.Right(ucrDDFF.GetValue, 1)) AndAlso IsNumeric(Strings.Left(ucrDDFF.GetValue, ucrDDFF.GetValue.Length - 1)) Then
-                'Get observation flag (last character) and set it to ucrFlag
-                ucrFlag.SetValue(Strings.Right(ucrDDFF.GetValue, 1))
-                'Remove the last character and set the result as the new DDFF value 
-                ucrDDFF.SetValue(Strings.Left(ucrDDFF.GetValue, ucrDDFF.GetValue.Length - 1))
-            End If
-
-            If IsNumeric(ucrDDFF.GetValue) Then
-                'check the length of DDFF matches with direction and speed digits
-                If ucrDDFF.GetValue.Length = iDirectionDigits + iSpeedDigits Then
-                    'If number of digits is correct then separate dd and ff
-                    'switch of validation notification temprary then restore
-                    bValidateSilently = ucrSpeed.bValidateSilently
-                    ucrSpeed.bValidateSilently = True
-                    ucrSpeed.SetValue(Strings.Right(ucrDDFF.GetValue, iSpeedDigits))
-                    ucrSpeed.bValidateSilently = bValidateSilently
-
-                    bValidateSilently = ucrDirection.bValidateSilently
-                    ucrDirection.bValidateSilently = True
-                    ucrDirection.SetValue(Strings.Left(ucrDDFF.GetValue, iDirectionDigits))
-                    ucrDirection.bValidateSilently = bValidateSilently
-
-                    'proceed to do QC checks for direction and speed
-                    If DoQcForDirection() AndAlso DoQcForSpeed() Then
-                        ucrDDFF.SetBackColor(Color.White)
-                        bValuesCorrect = True
-                    Else
-                        ucrDDFF.SetBackColor(Color.Cyan)
-                        bValuesCorrect = False
-                    End If
-
-                Else
-                    ucrDDFF.SetBackColor(Color.Cyan)
-                    bValuesCorrect = False
-                    MsgBox("Wrong number of digits for ddff!", MsgBoxStyle.Exclamation)
-                End If
-
-            Else
-                ucrDDFF.SetBackColor(Color.Red)
-                MsgBox("Number expected!", MsgBoxStyle.Critical)
-                bValuesCorrect = False
-            End If
-        End If
-
-        If bValuesCorrect Then
-            'if values are empty then set flag as M else remove the M if its the currently set flag
-            If ucrDDFF.IsEmpty AndAlso ucrDirection.IsEmpty AndAlso ucrSpeed.IsEmpty Then
-                ucrFlag.SetValue("M")
-            ElseIf ucrFlag.GetValue = "M"
-                ucrFlag.SetValue("")
-            End If
-
-            'then do QC for flag
-            bValuesCorrect = DoQcForFlag()
-        End If
-
-        Return bValuesCorrect
-    End Function
-
-    'QC checks for  direction
-    Private Function DoQcForDirection() As Boolean
-        'TODO. Should we check ucrDirection.GetValue.Length = iDirectionDigits ?
         Return ucrDirection.ValidateValue()
     End Function
 
-    'QC checks for speed
-    Public Function DoQcForSpeed() As Boolean
-        'TODO. Should we check ucrSpeed.GetValue.Length = iSpeedDigits ?
+    Public Function IsElementSpeedValueValid() As Boolean
         Return ucrSpeed.ValidateValue()
     End Function
 
-    'QC checks for flag
-    Private Function DoQcForFlag() As Boolean
+    Public Function IsElementFlagValueValid() As Boolean
         Dim bValuesCorrect As Boolean = True
 
-        'if value is empty then set flag as M else remove the M
+        'if any value is empty then set flag as M else remove the M
         If ucrDirection.IsEmpty OrElse ucrSpeed.IsEmpty Then
             If ucrFlag.GetValue = "M" OrElse ucrFlag.IsEmpty Then
                 bValuesCorrect = True
@@ -349,12 +225,297 @@ Public Class ucrDirectionSpeedFlag
         Return bValuesCorrect
     End Function
 
-    Private Sub ucrFlag_evtValueChanged(sender As Object, e As EventArgs) Handles ucrFlag.evtValueChanged
-        'ucrFlag should is set as readonly. That changes its back color to the one given below
-        'for consistency we are rienforcing this color everytime a value is changed on this control
-        'to override the white color being set on textbox validation subroutine
-        ucrFlag.SetBackColor(SystemColors.Control)
+    Public Overrides Sub Clear()
+        ucrDDFF.Clear()
+        ucrDirection.Clear()
+        ucrSpeed.Clear()
+        ucrFlag.Clear()
     End Sub
 
+    Public Sub SetBackColor(backColor As Color)
+        ucrDDFF.SetBackColor(backColor)
+        ucrDirection.SetBackColor(backColor)
+        ucrSpeed.SetBackColor(backColor)
+        ucrFlag.SetBackColor(backColor)
+    End Sub
+
+    Private Sub ucrDirectionSpeedFlag_Load(sender As Object, e As EventArgs) Handles Me.Load
+        If bFirstLoad Then
+            ucrDDFF.SetValidationTypeAsNone()
+            ucrDDFF.SetTextToUpper()
+
+            ucrDirection.bValidateSilently = True
+            ucrDirection.SetValidationTypeAsNumeric()
+            ucrDirection.SetAsReadOnly()
+            'ucrDirection being a readonly. Makes back color to be like that of readonly when it has a valid value
+            ucrDirection.SetValidColor(SystemColors.Control)
+
+            ucrSpeed.bValidateSilently = True
+            ucrSpeed.SetValidationTypeAsNumeric()
+            ucrSpeed.SetAsReadOnly()
+            ucrSpeed.SetValidColor(SystemColors.Control)
+
+            ucrFlag.SetTextToUpper()
+            ucrFlag.SetAsReadOnly()
+            ucrFlag.SetValidColor(SystemColors.Control)
+
+            bFirstLoad = False
+        End If
+    End Sub
+
+    Private Sub ucrDirectionSpeedFlag_KeyDown(sender As Object, e As KeyEventArgs) Handles ucrDDFF.evtKeyDown
+        'If {ENTER} key is pressed
+        If e.KeyCode = Keys.Enter Then
+            If sender Is ucrDDFF Then
+
+                ' Check if the opened form is in double key entry mode and compare the current entry with the uploaded one
+                Compare_Entry(ucrDDFF.TextboxValue)
+
+                'check ucrValue input. if value is empty then set flag as M else remove the M
+                If ucrDDFF.IsEmpty Then
+                    ucrFlag.SetValue("M")
+                    RaiseEvent evtGoToNextDSFControl(Me, e)
+                ElseIf ValidateText(ucrDDFF.GetValue) Then
+                    RaiseEvent evtGoToNextDSFControl(Me, e)
+                    'ElseIf ucrDDFF.GetValue = "M"
+                    '    RaiseEvent evtGoToNextDSFControl(Me, e)
+                Else
+                    DoQCForUcrDDFFInput()
+                End If
+            End If
+        End If
+
+        OnevtKeyDown(Me, e)
+    End Sub
+
+    Private Sub ucrDDFF_ValueChanged(sender As Object, e As EventArgs) Handles ucrDDFF.evtValueChanged
+        DoQCForUcrDDFFInput()
+        IsElementFlagValueValid()
+        OnevtValueChanged(Me, e)
+    End Sub
+
+    Private Function DoQCForUcrDDFFInput() As Boolean
+        Dim bValuesCorrect As Boolean = False
+        Dim bValidateSilently As Boolean
+        Dim bSuppressChangedEvents As Boolean
+
+        If ucrDDFF.IsEmpty() Then
+            'empty ucrDDFF is a valid value
+            bValuesCorrect = True
+            ucrDirection.SetValue("")
+            ucrSpeed.SetValue("")
+            If Not ucrFlag.IsEmpty AndAlso ucrFlag.GetValue <> "M" Then
+                'remove the flag
+                ucrFlag.SetValue("")
+            End If
+        Else
+            'check for an observation flag. Must be the last character if it's included
+            If Not IsNumeric(Strings.Right(ucrDDFF.GetValue, 1)) AndAlso IsNumeric(Strings.Left(ucrDDFF.GetValue, Strings.Len(ucrDDFF.GetValue) - 1)) Then
+                'Get observation flag (last character) and set it to ucrFlag
+                ucrFlag.SetValue(If(Strings.Right(ucrDDFF.GetValue, 1) = "M", "", Strings.Right(ucrDDFF.GetValue, 1)))
+
+                'Remove the last character and set the result as the new DDFF value 
+                bSuppressChangedEvents = ucrDDFF.bSuppressChangedEvents
+                ucrDDFF.bSuppressChangedEvents = True
+                ucrDDFF.SetValue(Strings.Left(ucrDDFF.GetValue, Strings.Len(ucrDDFF.GetValue) - 1))
+                ucrDDFF.bSuppressChangedEvents = bSuppressChangedEvents
+            Else
+                'remove the flag
+                ucrFlag.SetValue("")
+            End If
+
+            If IsNumeric(ucrDDFF.GetValue) Then
+                'check the length of DDFF matches with direction and speed digits
+                If ucrDDFF.GetValue.Length = iDirectionDigits + iSpeedDigits Then
+                    Dim bDirectionValid As Boolean
+                    Dim bSpeedValid As Boolean
+
+                    'separate dd and ff 
+                    ucrDirection.SetValue(Strings.Left(ucrDDFF.GetValue, iDirectionDigits))
+                    ucrSpeed.SetValue(Strings.Right(ucrDDFF.GetValue, iSpeedDigits))
+
+                    'validate the direction and speed values
+                    bValidateSilently = ucrDirection.bValidateSilently
+                    ucrDirection.bValidateSilently = False
+                    bDirectionValid = ucrDirection.ValidateValue()
+                    ucrDirection.bValidateSilently = bValidateSilently
+
+                    bValidateSilently = ucrSpeed.bValidateSilently
+                    ucrSpeed.bValidateSilently = False
+                    bSpeedValid = ucrSpeed.ValidateValue()
+                    ucrSpeed.bValidateSilently = bValidateSilently
+
+                    bValuesCorrect = (bDirectionValid AndAlso bSpeedValid)
+                    ucrDDFF.SetBackColor(If(bValuesCorrect, Color.White, Color.Red))
+
+                Else
+                    bValuesCorrect = False
+                    ucrDDFF.SetBackColor(Color.Cyan)
+                    MessageBox.Show("Wrong number of digits for ddff!", "DDFF Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                End If
+            Else
+
+                'if the value is just an M, then interpret it as a user's intention to put missing value
+                If ucrDDFF.GetValue = "M" Then
+                    ucrFlag.SetValue("M")
+                    ucrDDFF.SetValue("")
+                    bValuesCorrect = True
+                    ucrDDFF.SetBackColor(Color.White)
+                Else
+                    bValuesCorrect = False
+                    ucrDDFF.SetBackColor(Color.Red)
+                    MessageBox.Show("Number expected!", "DDFF Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                End If
+
+                'bValuesCorrect = False
+                'ucrDDFF.SetBackColor(Color.Red)
+                'MessageBox.Show("Number expected!", "DDFF Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
+            End If
+        End If
+
+        Return bValuesCorrect
+    End Function
+
+    ''' <summary>
+    ''' checks if the value of the DD and FF input in the ucrDDFF will be a valid value or not 
+    ''' when Quality Control is applied to the passed value
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function ValidateText(strNewVal As String) As Boolean
+        Dim bValuesCorrect As Boolean = False
+        Dim strVal As String = strNewVal
+
+        If strVal = "" Then
+            bValuesCorrect = True
+        Else
+            'if initial value is not a number, strip out the flag
+            If Not IsNumeric(Strings.Right(strVal, 1)) AndAlso IsNumeric(Strings.Left(strVal, strVal.Length - 1)) Then
+                strVal = Strings.Left(strVal, Strings.Len(strVal) - 1)
+            End If
+
+            If IsNumeric(strVal) AndAlso strVal.Length = (iDirectionDigits + iSpeedDigits) Then
+                'separate dd and ff check validity of direction and speed values
+                bValuesCorrect = (ucrDirection.ValidateText(Strings.Left(strVal, iDirectionDigits)) AndAlso ucrSpeed.ValidateText(Strings.Right(strVal, iSpeedDigits)))
+            End If
+        End If
+        Return bValuesCorrect
+    End Function
+
+    Public Sub SetContextMenuStrip(contextMenuStrip As ContextMenuStrip)
+        ucrDDFF.SetContextMenuStrip(contextMenuStrip)
+        ucrDirection.SetContextMenuStrip(contextMenuStrip)
+        ucrSpeed.SetContextMenuStrip(contextMenuStrip)
+        ucrFlag.SetContextMenuStrip(contextMenuStrip)
+    End Sub
+
+    Sub Compare_Entry(obsv As String)
+        Dim conn As New MySql.Data.MySqlClient.MySqlConnection
+        Dim constr As String
+        Dim frm, stn, elm, yy, mm, dd, hh, wdspd, wddir, obsv1 As String
+        'Dim Conflict As Boolean
+
+        constr = frmLogin.txtusrpwd.Text
+        conn.ConnectionString = constr
+        conn.Open()
+        'MsgBox(CurrentEntryValue)
+
+        'MsgBox(frmNewSynopticRA1.ucrStationSelector.cboValues.SelectedValue)
+
+        With frmKeyEntry.ListView1
+            For i = 0 To .Items.Count - 1
+                If .Items(i).Selected = True Then
+                    frm = .Items(i).SubItems(0).Text
+                    Exit For
+                End If
+            Next
+        End With
+        'MsgBox(frm & " " & obsv)
+
+        Try
+            With frmNewHourlyWind
+                If Not .chkRepeatEntry.Checked Then
+                    Exit Sub
+                End If
+                stn = .ucrStationSelector.cboValues.SelectedValue
+                elm = "111"
+                yy = .ucrYearSelector.cboValues.SelectedValue
+                mm = .ucrMonth.cboValues.SelectedValue
+                dd = .ucrDay.cboValues.SelectedValue
+                hh = Strings.Mid(.ucrHourlyWind.ActiveControl.Name, 22, Len(.ucrHourlyWind.ActiveControl.Name) - 21)
+            End With
+            'MsgBox(stn & " " & yy & " " & mm & " " & dd & " " & hh)
+
+            ' Get speed component of the wind wind data entry
+            If Not objKeyPress.Entered_Value(conn, stn, 111, yy, mm, dd, hh, obsv1) Then
+                MsgBox("Can't Verify: Wind speed record does not exist")
+                Exit Sub
+            Else
+                ' wind speed exits
+                wdspd = obsv1
+            End If
+            ' get direction component of wind data entry
+
+            If Not objKeyPress.Entered_Value(conn, stn, 112, yy, mm, dd, hh, obsv1) Then
+                MsgBox("Can't Verify: Wind direction Record does not exist")
+                Exit Sub
+            Else
+                ' Wind direction exists
+                wddir = obsv1
+            End If
+            'MsgBox(wddir & wdspd)
+
+            Validate_Entry(obsv, wddir & wdspd, stn, elm, yy, mm, dd, hh)
+        Catch ex As Exception
+                MsgBox(ex.Message)
+            End Try
+
+    End Sub
+
+    Sub Validate_Entry(obsv As String, obsv1 As String, stnid As String, elmcode As String, yy As String, mm As String, dd As String, hh As String)
+        Dim Conflict As Boolean
+        Dim C1, cpVal, dir, spd As String
+
+        Conflict = False
+        If obsv <> obsv1 Then
+            MsgBox("Conflicting Values")
+            ucrDDFF.BackColor = Color.Yellow
+            cpVal = ucrDDFF.TextboxValue
+            Conflict = True
+            ucrDDFF.TextboxValue = ""
+
+            Do While Conflict = True
+                C1 = InputBox("Reapeat Entry Please!", "Key Entry Verification")
+                If C1 <> cpVal Then
+                    cpVal = C1
+                    Conflict = True
+                    MsgBox("Re Entry Conflict! Try Again")
+                Else
+                    ucrDDFF.TextboxValue = C1
+                    Conflict = False
+                    dir = Strings.Left(C1, Int(frmNewHourlyWind.txtDirectionDigits.Text))
+                    spd = Strings.Right(C1, Int(frmNewHourlyWind.txtSpeedDigits.Text))
+
+                    'MsgBox(dir & spd)
+                    'Update database with the verified value
+                    If MsgBox("Update Conflicting Value?", vbYesNo, "Confirm Update") = MsgBoxResult.Yes Then
+                        ' Update Direction value
+                        If Not objKeyPress.Db_Update_Conflicts(stnid, 112, yy, mm, dd, hh, dir) Then
+                            MsgBox("Direction Update Failure")
+                        End If
+
+                        ' Update Speed value
+                        If Not objKeyPress.Db_Update_Conflicts(stnid, 111, yy, mm, dd, hh, spd) Then
+                            MsgBox("Direction Update Failure")
+                        End If
+                    Else
+                        MsgBox("Update Cancelled by operator")
+                        ucrDDFF.TextboxValue = ""
+                    End If
+                    ucrDDFF.BackColor = Color.White
+                End If
+            Loop
+        End If
+    End Sub
 End Class
 

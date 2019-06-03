@@ -18,6 +18,7 @@ Public Class ucrValueFlagPeriod
     Private bFirstLoad As Boolean = True
     Public Event evtGoToNextVFPControl(sender As Object, e As KeyEventArgs)
     Private bIncludePeriod As Boolean = True
+    Public objKeyPress As New dataEntryGlobalRoutines
 
     Public Overrides Sub SetTableName(strNewTable As String)
         MyBase.SetTableName(strNewTable)
@@ -123,24 +124,33 @@ Public Class ucrValueFlagPeriod
     Public Overrides Sub SetValue(objNewValue As Object)
         Dim lstValueFlagPeriod As List(Of Object)
 
-        MyBase.SetValue(objNewValue)
+        'MyBase.SetValue(objNewValue)
         lstValueFlagPeriod = TryCast(objNewValue, List(Of Object))
-        'TODO
-        'Not sure about this check. Not certain about whether we should force the
-        'developer to always pass a list with a min of 2 values for Value and flag
+
         If lstValueFlagPeriod.Count = 3 Then
-            ucrValue.SetValue(lstValueFlagPeriod(0))
-            ucrFlag.SetValue(lstValueFlagPeriod(1))
+            SetElementValue(lstValueFlagPeriod(0))
+            SetElementFlagValue(lstValueFlagPeriod(1))
             If bIncludePeriod Then
-                ucrPeriod.SetValue(lstValueFlagPeriod(2))
+                SetElementPeriodValue(lstValueFlagPeriod(2))
             End If
         ElseIf lstValueFlagPeriod.Count = 2 Then
-            ucrValue.SetValue(lstValueFlagPeriod(0))
-            ucrFlag.SetValue(lstValueFlagPeriod(1))
+            SetElementValue(lstValueFlagPeriod(0))
+            SetElementFlagValue(lstValueFlagPeriod(1))
         ElseIf lstValueFlagPeriod.Count = 1 Then
-            ucrValue.SetValue(lstValueFlagPeriod(0))
+            SetElementValue(lstValueFlagPeriod(0))
         End If
     End Sub
+
+    Public Overrides Function GetValue(Optional strFieldName As String = "") As Object
+        Dim lstValueFlagPeriod As New List(Of Object)
+
+        lstValueFlagPeriod.Add(GetElementValue())
+        lstValueFlagPeriod.Add(GetElementFlagValue())
+        If bIncludePeriod Then
+            lstValueFlagPeriod.Add(GetElementPeriodValue())
+        End If
+        Return lstValueFlagPeriod
+    End Function
 
     Public Sub SetElementValue(strValue As String)
         ucrValue.SetValue(strValue)
@@ -169,6 +179,10 @@ Public Class ucrValueFlagPeriod
         ucrPeriod.SetValue(strValue)
     End Sub
 
+    Public Function IsEmpty() As Boolean
+        Return IsElementValueEmpty() AndAlso IsElementFlagEmpty() AndAlso IsElementPeriodEmpty()
+    End Function
+
     Public Function IsElementValueEmpty() As Boolean
         Return ucrValue.IsEmpty()
     End Function
@@ -178,23 +192,56 @@ Public Class ucrValueFlagPeriod
     End Function
 
     Public Function IsElementPeriodEmpty() As Boolean
-        Return ucrPeriod.IsEmpty()
+        If bIncludePeriod Then
+            Return ucrPeriod.IsEmpty()
+        Else
+            Return True
+        End If
     End Function
 
-    Public Sub SetElementValueValidation(Optional iLowerLimit As Decimal = Decimal.MinValue, Optional iUpperLimit As Decimal = Decimal.MaxValue)
-        ucrValue.SetValidationTypeAsNumeric(dcmMin:=iLowerLimit, dcmMax:=iUpperLimit)
+    Public Sub SetElementValueLimit(iLowerLimit As Decimal, iUpperLimit As Decimal)
+        SetElementValueLowerLimit(iLowerLimit)
+        SetElementValueHigherLimit(iUpperLimit)
     End Sub
 
-    Public Function IsValuesValid() As Boolean
+    Public Sub SetElementValueLowerLimit(iLowerLimit As Decimal)
+        ucrValue.SetMinimumValue(iLowerLimit)
+    End Sub
+
+    Public Sub SetElementValueHigherLimit(iUpperLimit As Decimal)
+        ucrValue.SetMaximumValue(iUpperLimit)
+    End Sub
+
+    ''' <summary>
+    ''' checks if the values of all the controls are valid.
+    ''' </summary>
+    ''' <returns></returns>
+    Public Overrides Function ValidateValue() As Boolean
         Return IsElementValueValid() AndAlso IsElementFlagValid() AndAlso IsElementPeriodValid()
     End Function
 
     Public Function IsElementValueValid() As Boolean
-        Return DoQCForValue()
+        Return ucrValue.ValidateValue
     End Function
 
     Public Function IsElementFlagValid() As Boolean
-        Return DoQcForFlag()
+        Dim bValuesCorrect As Boolean = True
+
+        'if value is empty then set flag as M else remove the M
+        If ucrValue.IsEmpty Then
+            If Not ucrFlag.IsEmpty AndAlso ucrFlag.GetValue <> "M" Then
+                MessageBox.Show("M is the expected flag for a missing value", "Flag Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                ucrFlag.SetBackColor(Color.Cyan)
+                bValuesCorrect = False
+            End If
+        Else
+            If ucrFlag.GetValue = "M" Then
+                MessageBox.Show("M is the expected flag for a missing value", "Flag Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                ucrFlag.SetBackColor(Color.Cyan)
+                bValuesCorrect = False
+            End If
+        End If
+        Return bValuesCorrect
     End Function
 
     Public Function IsElementPeriodValid() As Boolean
@@ -207,55 +254,57 @@ Public Class ucrValueFlagPeriod
             ucrValue.SetValidationTypeAsNumeric()
             ucrFlag.SetTextToUpper()
             ucrFlag.SetAsReadOnly()
+            'ucrFlag being a readonly. This makes its back color to be just like that of readonly when it has a valid value
+            ucrFlag.SetValidColor(SystemColors.Control)
             SetTextBoxSize()
             bFirstLoad = False
         End If
     End Sub
 
     Private Sub ucrValueFlagPeriod_KeyDown(sender As Object, e As KeyEventArgs) Handles ucrValue.evtKeyDown, ucrFlag.evtKeyDown, ucrPeriod.evtKeyDown
-
-        'If {ENTER} key is pressed
-        'If e.KeyCode = Keys.Enter Then
-        ''My.Computer.Keyboard.SendKeys("{TAB}")
-        'ucrValue.TextHandling(sender, e)
-        'RaiseEvent evtGoToNextVFPControl(Me, e)
-        'End If
-
+        'CurrentEntryValue = ucrValue.TextboxValue
+        'MsgBox(CurrentEntryValue & " 0")
+        'Me.ucrValue.TextboxValue = ""
         If e.KeyCode = Keys.Enter Then
+            If sender Is ucrValue Then
 
-            If sender Is ucrValue.txtBox Then
-                'do QC for ucrValue first
-                If DoQCForValue() Then
-                    'if value is empty then set flag as M else remove the M
-                    If ucrValue.IsEmpty Then
-                        ucrFlag.SetValue("M")
-                    ElseIf ucrFlag.GetValue = "M"
-                        ucrFlag.SetValue("")
-                    End If
+                ' Check if the opened form is in double key entry mode and compare the current entry with the uploaded one
+                Compare_Entry(ucrValue.TextboxValue)
 
-                    'then do QC for flag
-                    If DoQcForFlag() Then
-                        'My.Computer.Keyboard.SendKeys("{TAB}")
-                        RaiseEvent evtGoToNextVFPControl(Me, e)
-                    End If
+                'check ucrValue input. if value is empty then set flag as M else remove the M
+                If ucrValue.IsEmpty Then
+                    ucrFlag.SetValue("M")
+                    RaiseEvent evtGoToNextVFPControl(Me, e)
+                ElseIf ValidateText(ucrValue.GetValue) Then
+                    RaiseEvent evtGoToNextVFPControl(Me, e)
+                    'ElseIf ucrValue.GetValue = "M"
+                    '    RaiseEvent evtGoToNextVFPControl(Me, e)
+                Else
+                    DoQCForValue()
                 End If
-            ElseIf sender Is ucrFlag.txtBox Then
-                If DoQcForFlag() Then
+            ElseIf sender Is ucrFlag Then
+                If IsElementFlagValid() Then
                     'My.Computer.Keyboard.SendKeys("{TAB}")
+                    RaiseEvent evtGoToNextVFPControl(Me, e)
+                End If
+            ElseIf sender Is ucrPeriod Then
+                If IsElementPeriodValid() Then
                     RaiseEvent evtGoToNextVFPControl(Me, e)
                 End If
             End If
         End If
 
+        OnevtKeyDown(Me, e)
+    End Sub
+
+    Private Sub ucrValue_TextChanged(sender As Object, e As EventArgs) Handles ucrValue.evtTextChanged
+        OnevtTextChanged(Me, e)
     End Sub
 
     Private Sub ucrValue_evtValueChanged(sender As Object, e As EventArgs) Handles ucrValue.evtValueChanged
         DoQCForValue()
-        'Remove the missing value flag for non empty
-        If Not ucrValue.IsEmpty AndAlso ucrFlag.GetValue = "M" Then
-            ucrFlag.SetValue("")
-        End If
-        DoQcForFlag()
+        IsElementFlagValid()
+        OnevtValueChanged(Me, e)
     End Sub
 
     Private Function DoQCForValue() As Boolean
@@ -264,20 +313,33 @@ Public Class ucrValueFlagPeriod
         Dim bSuppressChangedEvents As Boolean
 
         If ucrValue.IsEmpty Then
-            'empty ucrValue is a valid value
             bValuesCorrect = True
+            If Not ucrFlag.IsEmpty AndAlso ucrFlag.GetValue <> "M" Then
+                'remove the flag
+                ucrFlag.SetValue("")
+            End If
         Else
             'Check for an observation flag in the ucrValue.
             'If a flag exists then separate and place it in the  ucrValueFlag 
             If Not IsNumeric(Strings.Right(ucrValue.GetValue, 1)) AndAlso IsNumeric(Strings.Left(ucrValue.GetValue, Strings.Len(ucrValue.GetValue) - 1)) Then
-                'Get observation flag from the ucrValue (the last character). 
-                ucrFlag.SetValue(Strings.Right(ucrValue.GetValue, 1))
+                'Get observation flag from the ucrValue (the last character). If its an "M" just set flag as empty text
+                ucrFlag.SetValue(If(Strings.Right(ucrValue.GetValue, 1) = "M", "", Strings.Right(ucrValue.GetValue, 1)))
 
                 'Get the observation value by leaving out the last character  
                 bSuppressChangedEvents = ucrValue.bSuppressChangedEvents
                 ucrValue.bSuppressChangedEvents = True
                 ucrValue.SetValue(Strings.Left(ucrValue.GetValue, Strings.Len(ucrValue.GetValue) - 1))
                 ucrValue.bSuppressChangedEvents = bSuppressChangedEvents
+            Else
+                'if the value is just an M, then interpret it as a user's intention to put missing value
+                'If ucrValue.GetValue = "M" Then
+                '    ucrFlag.SetValue("M")
+                '    ucrValue.SetValue("")
+                'Else
+                '    'remove the flag
+                '    ucrFlag.SetValue("")
+                'End If
+                ucrFlag.SetValue("")
             End If
 
             'validate value loudly  
@@ -289,44 +351,179 @@ Public Class ucrValueFlagPeriod
         Return bValuesCorrect
     End Function
 
-    'QC checks for flag
-    Private Function DoQcForFlag() As Boolean
-        Dim bValuesCorrect As Boolean = True
+    ''' <summary>
+    ''' checks if the value input in the ucrValue will be a valid value or not 
+    ''' when Quality Control is applied to the passed value.
+    ''' </summary>
+    ''' <returns></returns>
+    Public Function ValidateText(strNewValue As String) As Boolean
+        Dim bValuesCorrect As Boolean = False
+        Dim strValue As String = strNewValue
 
-        'if value is empty then set flag as M else remove the M
-        If ucrValue.IsEmpty Then
-            If ucrFlag.GetValue = "M" OrElse ucrFlag.IsEmpty Then
-                bValuesCorrect = True
-            Else
-                MessageBox.Show("M is the expected flag for a missing value", "Flag Entry", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                ucrFlag.SetBackColor(Color.Cyan)
-                bValuesCorrect = False
-            End If
+        If strValue = "" Then
+            bValuesCorrect = True
         Else
-            If ucrFlag.GetValue = "M" Then
-                'MsgBox("M is the expected flag for a missing value", MsgBoxStyle.Critical)
-                ucrFlag.SetBackColor(Color.Cyan)
-                bValuesCorrect = False
+            'Check for an observation flag in the value If a flag exists then separate and get it 
+            If Not IsNumeric(Strings.Right(strValue, 1)) AndAlso IsNumeric(Strings.Left(strValue, Strings.Len(strValue) - 1)) Then
+                strValue = Strings.Left(strValue, Strings.Len(strValue) - 1)
             Else
-                bValuesCorrect = True
+                'if the value is just an M, ignore it and interpret it as a user's intention to put missing value
+                'If strValue = "M" Then
+                '    strValue = ""
+                'End If
             End If
-        End If
 
+            'check if the result is a valid value 
+            bValuesCorrect = ucrValue.ValidateText(strValue)
+        End If
         Return bValuesCorrect
     End Function
 
     Private Sub SetTextBoxSize()
-        ucrValue.SetElementValueSize(New Size(51, 20))
-        ucrFlag.SetElementValueSize(New Size(27, 20))
-        ucrPeriod.SetElementValueSize(New Size(33, 20))
+        ucrValue.SetSize(New Size(51, 20))
+        ucrFlag.SetSize(New Size(27, 20))
+        ucrPeriod.SetSize(New Size(33, 20))
     End Sub
 
-    Private Sub ucrFlag_evtValueChanged(sender As Object, e As EventArgs) Handles ucrFlag.evtValueChanged
-        'ucrFlag should is set as readonly. That changes its back color to the one given below
-        'for consistency we are rienforcing this color everytime a value is changed on this control
-        'to override the white color being set on textbox validation subroutine
-        ucrFlag.SetBackColor(SystemColors.Control)
+    Public Sub SetContextMenuStrip(contextMenuStrip As ContextMenuStrip)
+        ucrValue.SetContextMenuStrip(contextMenuStrip)
+        ucrFlag.SetContextMenuStrip(contextMenuStrip)
+        ucrPeriod.SetContextMenuStrip(contextMenuStrip)
     End Sub
 
+    Sub Compare_Entry(obsv As String)
+        Dim conn As New MySql.Data.MySqlClient.MySqlConnection
+        Dim constr As String
+        Dim frm, stn, elm, yy, mm, dd, hh, dttime, obsv1, C1, cpVal As String
+        Dim Conflict As Boolean
 
+        constr = frmLogin.txtusrpwd.Text
+        conn.ConnectionString = constr
+        conn.Open()
+        'MsgBox(CurrentEntryValue)
+
+        'MsgBox(frmNewSynopticRA1.ucrStationSelector.cboValues.SelectedValue)
+
+        With frmKeyEntry.ListView1
+                For i = 0 To .Items.Count - 1
+                    If .Items(i).Selected = True Then
+                        frm = .Items(i).SubItems(0).Text
+                        Exit For
+                    End If
+                Next
+
+            'MsgBox(frm)
+            Select Case frm
+                Case "form_synoptic_2_ra1"
+                    Try
+                        With frmNewSynopticRA1
+                            If Not .chkRepeatEntry.Checked Then
+                                Exit Sub
+                            End If
+                            stn = .ucrStationSelector.cboValues.SelectedValue
+                            elm = .ucrSynopticRA1.ActiveControl.Tag
+                            yy = .ucrYearSelector.cboValues.SelectedValue
+                            mm = .ucrMonth.cboValues.SelectedValue
+                            dd = .ucrDay.cboValues.SelectedValue
+                            hh = .ucrHour.cboValues.SelectedValue
+                        End With
+                        If Not objKeyPress.Entered_Value(conn, stn, elm, yy, mm, dd, hh, obsv1) Then
+                            MsgBox("Can't Verify: Record does not exist")
+                            Exit Sub
+                        Else
+                            ' Start Verification process
+                            Validate_Entry(obsv, obsv1, stn, elm, yy, mm, dd, hh)
+                        End If
+                    Catch ex As Exception
+                        MsgBox(ex.Message)
+                    End Try
+                Case "form_daily2"
+                    Try
+                        With frmNewFormDaily2
+                            If Not .chkRepeatEntry.Checked Then
+                                Exit Sub
+                            End If
+                            stn = .ucrStationSelector.cboValues.SelectedValue
+                            elm = .ucrElementSelector.cboValues.SelectedValue
+                            yy = .ucrYearSelector.cboValues.SelectedValue
+                            mm = .ucrMonth.cboValues.SelectedValue
+                            dd = Mid(.ucrFormDaily.ActiveControl.Name, 19, Len(.ucrFormDaily.ActiveControl.Name) - 18)
+                            hh = .ucrHour.cboValues.SelectedValue
+                        End With
+                        If Not objKeyPress.Entered_Value(conn, stn, elm, yy, mm, dd, hh, obsv1) Then
+                            MsgBox("Can't Verify: Record does not exist")
+                            Exit Sub
+                        Else
+                            Validate_Entry(obsv, obsv1, stn, elm, yy, mm, dd, hh)
+                        End If
+                        'MsgBox(stn & " " & elm & " " & yy & " " & mm & " " & dd & " " & hh & " " & obsv1)
+                    Catch ex As Exception
+                        MsgBox(ex.Message)
+                    End Try
+                Case "form_hourly"
+                    Try
+                        With frmNewHourly
+                            If Not .chkRepeatEntry.Checked Then
+                                Exit Sub
+                            End If
+                            stn = .ucrStationSelector.cboValues.SelectedValue
+                            elm = .ucrElementSelector.cboValues.SelectedValue
+                            yy = .ucrYearSelector.cboValues.SelectedValue
+                            mm = .ucrMonth.cboValues.SelectedValue
+                            dd = .ucrDay.cboValues.SelectedValue
+                            hh = Strings.Mid(.ucrHourly.ActiveControl.Name, 19, Len(.ucrHourly.ActiveControl.Name) - 18)
+                            'MsgBox(stn & " " & elm & " " & yy & " " & mm & " " & dd & " " & hh)
+                        End With
+
+                        If Not objKeyPress.Entered_Value(conn, stn, elm, yy, mm, dd, hh, obsv1) Then
+                            MsgBox("Can't Verify: Record does not exist")
+                            Exit Sub
+                        Else
+                            'MsgBox(obsv1)
+                            Validate_Entry(obsv, obsv1, stn, elm, yy, mm, dd, hh)
+                        End If
+                    Catch ex As Exception
+                        MsgBox(ex.Message)
+                    End Try
+                Case "form_monthly"
+            End Select
+        End With
+
+
+    End Sub
+    Sub Validate_Entry(obsv As String, obsv1 As String, stnid As String, elmcode As String, yy As String, mm As String, dd As String, hh As String)
+        Dim Conflict As Boolean
+        Dim C1, cpVal As String
+
+        Conflict = False
+        If obsv <> obsv1 Then
+            MsgBox("Conflicting Values")
+            ucrValue.BackColor = Color.Yellow
+            cpVal = ucrValue.TextboxValue
+            Conflict = True
+            ucrValue.TextboxValue = ""
+
+            Do While Conflict = True
+                C1 = InputBox("Reapeat Entry Please!", "Key Entry Verification")
+                If C1 <> cpVal Then
+                    cpVal = C1
+                    Conflict = True
+                    MsgBox("Re Entry Conflict! Try Again")
+                Else
+                    ucrValue.TextboxValue = C1
+                    Conflict = False
+                    'Update database with the verified value
+                    If MsgBox("Update Conflicting Value?", vbYesNo, "Confirm Update") = MsgBoxResult.Yes Then
+                        If Not objKeyPress.Db_Update_Conflicts(stnid, elmcode, yy, mm, dd, hh, C1) Then
+                            MsgBox("Update Failure")
+                        End If
+                    Else
+                        MsgBox("Update Cancelled by operator")
+                        ucrValue.TextboxValue = ""
+                    End If
+                    ucrValue.BackColor = Color.White
+                End If
+            Loop
+        End If
+    End Sub
 End Class

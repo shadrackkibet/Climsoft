@@ -48,18 +48,15 @@
             dtbRecords = If(lstShortMonths.Contains(iMonth), dtb30, dtb31)
         End If
 
-        If dtbRecords IsNot Nothing Then
-            dtbRecords.DefaultView.Sort = strDay & " ASC"
-            If dtbRecords.Rows.Count > 0 Then
-                cboValues.DataSource = dtbRecords
-                cboValues.ValueMember = strDay
-                If bFirstLoad Then
-                    SetViewTypeAsDay()
-                End If
-            Else
-                cboValues.DataSource = Nothing
-            End If
+        bSuppressChangedEvents = True
+        dtbRecords.DefaultView.Sort = strDay & " ASC"
+        cboValues.DataSource = dtbRecords
+        cboValues.ValueMember = strDay
+        If bFirstLoad Then
+            SetViewTypeAsDay()
         End If
+        bSuppressChangedEvents = False
+        'OnevtValueChanged(Me, Nothing)
     End Sub
 
     Public Sub SetViewTypeAsDay()
@@ -83,14 +80,19 @@
     ''' this gets called when the linked year or month controls change their values
     ''' </summary>
     Private Sub YearMonthEvtValueChanged()
-        Dim iCurrentSelectedDay As Integer
-        'store the current selected value to retain it after repopulating the control
-        iCurrentSelectedDay = GetValue(strDay)
-        PopulateControl()
-        If dtbRecords IsNot Nothing AndAlso dtbRecords.Rows.Count < iCurrentSelectedDay Then
-            iCurrentSelectedDay = dtbRecords.Rows.Count
+        If ucrLinkedYear.ValidateValue AndAlso ucrLinkedMonth.ValidateValue Then
+            Dim iCurrentSelectedDay As Integer
+            'store the current selected value to retain it after repopulating the control
+            If Integer.TryParse(GetValue(strDay), iCurrentSelectedDay) Then
+                PopulateControl()
+                If dtbRecords IsNot Nothing AndAlso dtbRecords.Rows.Count < iCurrentSelectedDay Then
+                    iCurrentSelectedDay = dtbRecords.Rows.Count
+                End If
+                SetValue(iCurrentSelectedDay)
+            Else
+                PopulateControl()
+            End If
         End If
-        SetValue(iCurrentSelectedDay)
     End Sub
 
     Protected Overrides Sub ucrComboBoxSelector_Load(sender As Object, e As EventArgs) Handles Me.Load

@@ -59,7 +59,7 @@ Public Class frmMainMenu
                     cmdUserManagement.Enabled = False
                     cmdProducts.Enabled = False
                     cmdUserManagement.Enabled = False
-                    '
+
                 ElseIf usrRole = "ClimsoftMetadata" Then
                     mnuProducts.Enabled = False
                     mnuAdministration.Enabled = False
@@ -72,6 +72,8 @@ Public Class frmMainMenu
                     cmdQC.Enabled = False
                     cmdProducts.Enabled = False
                     cmdKeyEntry.Enabled = False
+                    cmdPaperArchive.Enabled = False
+
                 ElseIf usrRole = "ClimsoftProducts" Then
                     mnuAdministration.Enabled = False
                     mnuTools.Enabled = False
@@ -83,6 +85,8 @@ Public Class frmMainMenu
                     cmdUserManagement.Enabled = False
                     cmdQC.Enabled = False
                     cmdKeyEntry.Enabled = False
+                    cmdPaperArchive.Enabled = False
+
                 ElseIf usrRole = "ClimsoftTranslator" Then
                     mnuAdministration.Enabled = False
                     mnuTools.Enabled = False
@@ -95,6 +99,7 @@ Public Class frmMainMenu
                     cmdKeyEntry.Enabled = False
                     cmdPaperArchive.Enabled = False
                     cmdProducts.Enabled = False
+                    cmdMetadata.Enabled = False
                 End If
             End If
         Catch ex As Exception
@@ -202,13 +207,7 @@ Public Class frmMainMenu
 
     End Sub
 
-    Private Sub mnuHelpAbout_Click(sender As Object, e As EventArgs) Handles mnuHelpAbout.Click
 
-    End Sub
-
-    Private Sub cmdKeyEntry_DoubleClick(sender As Object, e As EventArgs) Handles cmdKeyEntry.DoubleClick
-
-    End Sub
 
     Private Sub DataFormsToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DataFormsToolStripMenuItem.Click
         frmDataForms.Show()
@@ -291,5 +290,35 @@ Public Class frmMainMenu
 
     Private Sub UpdateObservationsToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles UpdateObservationsToolStripMenuItem1.Click
         frmModifyObservations.Show()
+    End Sub
+
+    Private Sub OpeartionsMonitoringToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles OpeartionsMonitoringToolStripMenuItem.Click
+        frmMonitoring.Show()
+    End Sub
+
+    Private Sub UserRecordsToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles UserRecordsToolStripMenuItem1.Click
+        With frmMonitoring
+            .grpPerformance.Enabled = False
+            .grpVerify.Enabled = False
+            .grpSettings.Enabled = False
+            .optAll.Enabled = False
+            .cboUser.Enabled = False
+            .cboUser.Text = frmLogin.txtUsername.Text
+            .optUsers.Enabled = False
+            .Show()
+        End With
+
+    End Sub
+
+    Private Sub frmMainMenu_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
+        End
+    End Sub
+
+    Private Sub MonthlyToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles MonthlyToolStripMenuItem.Click
+        frmElementSequencerMonthly.Show()
+    End Sub
+
+    Private Sub EmptyKeyEntryTablesToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EmptyKeyEntryTablesToolStripMenuItem.Click
+        frmEntryForms.Show()
     End Sub
 End Class
