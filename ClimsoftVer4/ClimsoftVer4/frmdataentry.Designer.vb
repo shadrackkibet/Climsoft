@@ -44,7 +44,8 @@ Partial Class frmKeyEntry
         Me.lstViewForms.Location = New System.Drawing.Point(4, 27)
         Me.lstViewForms.Name = "lstViewForms"
         Me.lstViewForms.RightToLeftLayout = True
-        Me.lstViewForms.Size = New System.Drawing.Size(659, 252)
+        Me.lstViewForms.Scrollable = False
+        Me.lstViewForms.Size = New System.Drawing.Size(659, 235)
         Me.lstViewForms.TabIndex = 0
         Me.lstViewForms.UseCompatibleStateImageBehavior = False
         Me.lstViewForms.View = System.Windows.Forms.View.Details
@@ -65,7 +66,8 @@ Partial Class frmKeyEntry
         '
         'btnCancel
         '
-        Me.btnCancel.Location = New System.Drawing.Point(521, 284)
+        Me.btnCancel.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnCancel.Location = New System.Drawing.Point(521, 265)
         Me.btnCancel.Name = "btnCancel"
         Me.btnCancel.Size = New System.Drawing.Size(69, 27)
         Me.btnCancel.TabIndex = 6
@@ -74,7 +76,8 @@ Partial Class frmKeyEntry
         '
         'btnHelp
         '
-        Me.btnHelp.Location = New System.Drawing.Point(596, 284)
+        Me.btnHelp.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnHelp.Location = New System.Drawing.Point(596, 265)
         Me.btnHelp.Name = "btnHelp"
         Me.btnHelp.Size = New System.Drawing.Size(69, 27)
         Me.btnHelp.TabIndex = 5
@@ -83,7 +86,8 @@ Partial Class frmKeyEntry
         '
         'btnOk
         '
-        Me.btnOk.Location = New System.Drawing.Point(446, 284)
+        Me.btnOk.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.btnOk.Location = New System.Drawing.Point(446, 265)
         Me.btnOk.Name = "btnOk"
         Me.btnOk.Size = New System.Drawing.Size(69, 27)
         Me.btnOk.TabIndex = 4
@@ -103,13 +107,13 @@ Partial Class frmKeyEntry
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(667, 317)
+        Me.ClientSize = New System.Drawing.Size(667, 295)
         Me.Controls.Add(Me.lblSelection)
         Me.Controls.Add(Me.btnCancel)
         Me.Controls.Add(Me.btnHelp)
         Me.Controls.Add(Me.btnOk)
         Me.Controls.Add(Me.lstViewForms)
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow
         Me.HelpProvider1.SetHelpKeyword(Me, "dataentryforms.htm")
         Me.HelpProvider1.SetHelpNavigator(Me, System.Windows.Forms.HelpNavigator.Topic)
         Me.HelpProvider1.SetHelpString(Me, "topic2")
