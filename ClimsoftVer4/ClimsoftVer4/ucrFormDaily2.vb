@@ -32,6 +32,10 @@ Public Class ucrFormDaily2
             ucrVisibilityUnits.bValidate = False
 
 
+
+            ucrHour.SetDefaultValue(GetDefaultHourValue())
+
+
             'the alternative of this would be to select the first control (in the designer), click Send to Back, and repeat.
             Dim allVFP = From vfp In Me.Controls.OfType(Of ucrValueFlagPeriod)() Order By vfp.TabIndex
             Dim shiftCells As New ClsShiftCells()
@@ -46,6 +50,17 @@ Public Class ucrFormDaily2
             Next
 
             SetUpTableEntry("form_daily2")
+
+            'this is placed here to add onto the keydown event set in the SetUpTableEntry() subroutine
+            AddHandler ucrInputTotal.evtKeyDown, Sub(sender1 As Object, e1 As KeyEventArgs)
+                                                     If e1.KeyCode = Keys.Enter Then
+                                                         If Not CheckTotal() Then
+                                                             ucrInputTotal.Focus()
+                                                             e1.SuppressKeyPress = True
+                                                         End If
+                                                     End If
+                                                 End Sub
+
             AddField("signature")
             AddField("entryDatetime")
 
@@ -68,17 +83,26 @@ Public Class ucrFormDaily2
     End Sub
 
     Private Sub btnAddNew_Click(sender As Object, e As EventArgs) Handles btnAddNew.Click
+        Dim usrStn As New dataEntryGlobalRoutines
         If chkEnableSequencer.Checked Then
             ' temporary until we know how to get all fields from table without specifying names
             ucrDaily2Navigation.NewSequencerRecord(txtSequencer.Text, {"elementId"}, {ucrMonth}, ucrYearSelector)
             SaveEnable()
             ucrValueFlagPeriod1.Focus()
+
+            'Get the Station from the last record by the current login user
+            usrStn.GetCurrentStation("form_daily2", ucrStationSelector.cboValues.Text)
         End If
+
     End Sub
     Private Sub BtnSaveAndUpdate_Click(sender As Object, e As EventArgs) Handles btnSave.Click, btnUpdate.Click
-        'Change the signature(user) and the DATETIME first before saving 
-        GetTable.Rows(0).Item("signature") = frmLogin.txtUsername.Text
-        GetTable.Rows(0).Item("entryDatetime") = Date.Now
+        Try
+            'Change the signature(user) and the DATETIME first before saving 
+            GetTable.Rows(0).Item("signature") = frmLogin.txtUsername.Text
+            GetTable.Rows(0).Item("entryDatetime") = Date.Now
+        Catch ex As Exception
+            MessageBox.Show("Error: " & ex.Message, "Saving", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
     Private Sub btnView_Click(sender As Object, e As EventArgs) Handles btnView.Click
         Dim viewRecords As New dataEntryGlobalRoutines
@@ -115,6 +139,14 @@ Public Class ucrFormDaily2
     End Sub
 
     Private Sub BtnUpload_Click(sender As Object, e As EventArgs) Handles btnUpload.Click
+        'Open form for displaying data transfer progress
+        frmFormUpload.lblFormName.Text = "form_daily2"
+        frmFormUpload.Text = frmFormUpload.Text & " for " & frmFormUpload.lblFormName.Text
+
+        frmFormUpload.Show()
+        Exit Sub
+
+
         'upload code in the background thread
         Dim frm As New frmNewComputationProgress
         frm.SetHeader("Uploading " & ucrDaily2Navigation.iMaxRows & " records")
@@ -129,15 +161,6 @@ Public Class ucrFormDaily2
 
     Private Sub chkEnableSequencer_CheckedChanged(sender As Object, e As EventArgs) Handles chkEnableSequencer.CheckedChanged
         txtSequencer.Text = If(chkEnableSequencer.Checked, "seq_daily_element", "")
-    End Sub
-
-    Private Sub ucrInputTotal_evtKeyDown(sender As Object, e As KeyEventArgs) Handles ucrInputTotal.evtKeyDown
-        If e.KeyCode = Keys.Enter Then
-            If Not CheckTotal() Then
-                ucrInputTotal.Focus()
-                e.SuppressKeyPress = True
-            End If
-        End If
     End Sub
 
     Private Function IsValuesEmpty() As Boolean
@@ -215,6 +238,23 @@ Public Class ucrFormDaily2
         End If
 
         Return bValueCorrect
+    End Function
+
+    'Get the default hour settings from the database
+    Private Function GetDefaultHourValue() As Integer
+        Dim iDefaultHourValue As Integer = 0
+        Dim clsDataDefinition As New DataCall
+        Dim dtbl As DataTable
+
+        clsDataDefinition.SetTableNameAndFields("regkeys", {"keyName", "keyValue"})
+        clsDataDefinition.SetFilter("keyName", "=", "key01", bIsPositiveCondition:=True, bForceValuesAsString:=True)
+        dtbl = clsDataDefinition.GetDataTable()
+        If dtbl IsNot Nothing AndAlso dtbl.Rows.Count > 0 Then
+            Integer.TryParse(dtbl.Rows(0).Item("keyValue"), iDefaultHourValue)
+        End If
+
+        Return iDefaultHourValue
+
     End Function
 
     ''' <summary>
@@ -330,7 +370,7 @@ Public Class ucrFormDaily2
             strTableName = GetTableName()
 
             'Get all the records from the table
-            Using cmdSelect As New MySql.Data.MySqlClient.MySqlCommand("Select * FROM " & strTableName & " ORDER BY entryDatetime", clsDataConnection.OpenedConnection)
+            Using cmdSelect As New MySql.Data.MySqlClient.MySqlCommand("Select * FROM " & strTableName & " ORDER BY entryDatetime", clsDataConnection.GetOpenedConnection)
                 Using da As New MySql.Data.MySqlClient.MySqlDataAdapter(cmdSelect)
                     da.Fill(dtbAllRecords)
                 End Using
@@ -369,7 +409,7 @@ Public Class ucrFormDaily2
                         bUpdateRecord = False
                         'check if record exists
                         strSql = "SELECT * FROM observationInitial WHERE recordedFrom=@stationId AND describedBy=@elemCode AND obsDatetime=@obsDatetime AND qcStatus=@qcStatus AND acquisitionType=@acquisitiontype AND dataForm=@dataForm"
-                        Using cmd As New MySql.Data.MySqlClient.MySqlCommand(strSql, clsDataConnection.OpenedConnection)
+                        Using cmd As New MySql.Data.MySqlClient.MySqlCommand(strSql, clsDataConnection.GetOpenedConnection)
                             cmd.Parameters.AddWithValue("@stationId", strStationId)
                             cmd.Parameters.AddWithValue("@elemCode", lElementId)
                             cmd.Parameters.AddWithValue("@obsDatetime", dtObsDateTime)
@@ -420,7 +460,7 @@ Public Class ucrFormDaily2
                         End If
 
                         Try
-                            Using cmdSave As New MySql.Data.MySqlClient.MySqlCommand(strSql, clsDataConnection.OpenedConnection)
+                            Using cmdSave As New MySql.Data.MySqlClient.MySqlCommand(strSql, clsDataConnection.GetOpenedConnection)
                                 'cmd.Parameters.Add("@stationId", SqlDbType.VarChar, 255).Value = strStationId
                                 cmdSave.Parameters.AddWithValue("@stationId", strStationId)
                                 cmdSave.Parameters.AddWithValue("@elemCode", lElementId)

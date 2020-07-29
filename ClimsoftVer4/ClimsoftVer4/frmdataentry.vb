@@ -88,11 +88,14 @@ Public Class frmKeyEntry
                 Case "form_hourlywind"
                     frmNewHourlyWind.Show()
                 Case "form_agro1"
-                    frmNewAgrometKenya.Show()
+                    form_agro1.Show()
                 Case "form_synoptic2_caribbean"
                     formSynopticCaribbean.Show()
             End Select
         End If
     End Sub
 
+    Private Sub FontDialog1_Apply(sender As Object, e As EventArgs)
+
+    End Sub
 End Class
